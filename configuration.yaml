@@ -300,6 +300,22 @@ binary_sensor:
         device_class: heat
         value_template: "{{ is_state_attr('climate.bedrooms', 'operation', 'heat') }}"
         friendly_name: Bedrooms
+      atlas_ignition:
+        friendly_name: Atlas Ignition
+        device_class: moving
+        value_template: >-
+          {{ is_state('input_boolean.atlas_ignition') }}
+      ram_ignition:
+        friendly_name: RAM Ignition
+        device_class: moving
+        value_template: >-
+          {{ is_state('input_boolean.ram_ignition') }}
+      outage_arl1:
+        friendly_name: Outage Arlington1
+        value_template: >-
+          {{ is_state('binary_sensor.here_online', 'off')
+             and is_state('binary_sensor.office_online', 'off')
+             and is_state('binary_sensor.playroom_online', 'off') }}
       heat_arl:
         friendly_name: Heat Requested
         device_class: heat
@@ -528,6 +544,21 @@ sensor:
     start: '{{ now().replace(hour=0).replace(minute=0).replace(second=0) }}'
     end: '{{ now() }}'
   - platform: history_stats
+    name: Arl1 outages today
+    entity_id: binary_sensor.outages_arl1
+    state: 'on'
+    type: count
+    start: '{{ now().replace(hour=0).replace(minute=0).replace(second=0) }}'
+    end: '{{ now() }}'
+  - platform: history_stats
+    name: Arl1 outages yesterday 
+    entity_id: binary_sensor.outages_arl1
+    state: 'on'
+    type: count
+    end: '{{ now().replace(hour=0).replace(minute=0).replace(second=0) }}'
+    duration:
+      hours: 24
+  - platform: history_stats
     name: Here outages today
     entity_id: binary_sensor.here_online
     state: 'off'
@@ -750,10 +781,14 @@ zone:
     longitude: !secret lake_lon
     radius: 2000
     icon: mdi:home-heart
-  - name: Home
+  - name: Nearby
     latitude: !secret home_lat
     longitude: !secret home_lon
     radius: 1000
+  - name: Home
+    latitude: !secret home_lat
+    longitude: !secret home_lon
+    radius: 100
     icon: mdi:home
 #    passive: true
   - name: School
@@ -776,6 +811,12 @@ input_boolean:
     icon: mdi:home
   molly_today:
     name: Molly Today
+    initial: off
+  atlas_ignition:
+    name: Atlas running
+    initial: off
+  ram_ignition:
+    name: RAM running
     initial: off
 
 #device_tracker:

@@ -404,8 +404,6 @@
       away_mode: false
       entity_id: group.ecobee
     service: climate.set_away_mode
-  - data: {}
-    service: python_script.welcome
 - id: '1513741552872'
   alias: ComeLake
   trigger:
@@ -444,18 +442,8 @@
   - data:
       event: too_cold
     service: ifttt.trigger
-- action:
-  - data: {}
-    service: python_script.welcome
-  - delay: '10'
-  - data:
-      delay: 00:00:02
-      entity: media_player.living_room
-      volume: '0.5'
-    service: script.sonos_say
+- id: '1516226485722'
   alias: Welcome Home
-  condition: []
-  id: '1516226485722'
   trigger:
   - entity_id: device_tracker.lars_se
     event: enter
@@ -465,6 +453,10 @@
     event: enter
     platform: zone
     zone: zone.home
+  condition: []
+  action:
+  - data: {}
+    service: python_script.welcome
 - id: '1516487261296'
   alias: Sunset Arlington
   trigger:
@@ -527,10 +519,10 @@
 - id: '1543166833430'
   alias: CheckEcobee
   trigger:
-  - entity_id: binary_sensor.office_online
-    from: 'on'
+  - entity_id: binary_sensor.outage_arl1
+    from: 'off'
     platform: state
-    to: 'off'
+    to: 'on'
   condition: []
   action:
   - data:
@@ -635,3 +627,84 @@
   - data_template:
       message: '{{ trigger.entity_id }} is {{ trigger.to_state.state }}'
     service: notify.ios_lars_se
+- id: '1544989724025'
+  alias: automatic_update
+  trigger:
+  - event_data: {}
+    event_type: automatic_update
+    platform: event
+  condition: []
+  action:
+  - data_template:
+      message: '{{ trigger.event }}'
+    service: system_log.write
+  - data_template:
+      message: '{{ trigger.event.data }}'
+    service: system_log.write
+- id: '1544991801097'
+  alias: atlas_ignition
+  trigger:
+  - event_data:
+      type: ignition:on
+      vehicle:
+        id: C_bc9aca100b51531f
+    event_type: automatic_update
+    platform: event
+  condition: []
+  action:
+  - data:
+      entity_id: input_boolean.atlas_ignition
+    service: input_boolean.turn_on
+- id: '1544991801098'
+  alias: ram_ignition
+  trigger:
+  - event_data:
+      type: ignition:on
+      vehicle:
+        id: C_204c585711de7cbf
+    event_type: automatic_update
+    platform: event
+  condition: []
+  action:
+  - data:
+      entity_id: input_boolean.ram_ignition
+    service: input_boolean.turn_on
+- id: '1544991801099'
+  alias: ram_ignition_off
+  trigger:
+  - event_data:
+      type: ignition:off
+      vehicle:
+        id: C_204c585711de7cbf
+    event_type: automatic_update
+    platform: event
+  condition: []
+  action:
+  - data:
+      entity_id: input_boolean.ram_ignition
+    service: input_boolean.turn_off
+- id: '1544991801100'
+  alias: atlas_ignition_off
+  trigger:
+  - event_data:
+      type: ignition:off
+      vehicle:
+        id: C_bc9aca100b51531f
+    event_type: automatic_update
+    platform: event
+  condition: []
+  action:
+  - data:
+      entity_id: input_boolean.atlas_ignition
+    service: input_boolean.turn_off
+- id: '1544996554305'
+  alias: AtlasTanken
+  trigger:
+  - below: '30'
+    entity_id: sensor.atlas_fuel
+    platform: numeric_state
+  condition: []
+  action:
+  - data:
+      message: Du solltest tanken gehen!
+    service: notify.ios_danielas_iphone

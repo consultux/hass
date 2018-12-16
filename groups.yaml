@@ -8,7 +8,7 @@
     - group.lakehouse
     - proximity.home
     - proximity.lake
-    - weather.here
+    - weather.bedrooms
 
  family:
   name: Family
@@ -17,6 +17,7 @@
     - binary_sensor.somebody_lake
     - device_tracker.lars_se
     - device_tracker.danielas_iphone
+    - device_tracker.lara_iphone
     - sensor.coffee_today
     - sensor.lake_house_eta
 
@@ -81,7 +82,7 @@
     - group.hvac_arl
     - group.ecobee
     - group.occupancy_arl
-    - group.outages
+#    - group.outages
     - group.arl_burn
     - history_graph.here
     - history_graph.office
@@ -91,6 +92,9 @@
  arl_burn:
   name: Heat Requested
   entities:
+    - binary_sensor.outage_arl1
+    - sensor.arl1_outages_today
+    - sensor.arl1_outages_yesterday
     - sensor.arlington1_today
     - sensor.arlington1_today_hr
     - sensor.arlington1_yesterday
@@ -103,6 +107,8 @@
  outages:
   name: Outages
   entities:
+    - sensor.arl1_outages_today
+    - sensor.arl1_outages_yesterday
     - sensor.here_outages_today
     - sensor.here_outages_yesterday
     - sensor.office_outages_today
@@ -250,9 +256,11 @@
   entities: 
     - device_tracker.2018_volkswagen_atlas
     - sensor.atlas_fuel
+    - binary_sensor.atlas_ignition
 
  ram:
   name: RAM 1500
   entities:  
     - device_tracker.2019_ram_1500
     - sensor.ram_fuel
+    - binary_sensor.ram_ignition
