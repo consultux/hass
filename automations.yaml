@@ -1,0 +1,637 @@
+- id: furnace_notify
+  alias: furnace state notify
+  initial_state: false
+  trigger:
+  - platform: state
+    entity_id: binary_sensor.furnace
+  action:
+    service: notify.ios_lars_se
+    data:
+      message: Furnace is {{ states('binary_sensor.furnace') }}
+- id: daniela_location
+  alias: daniela location change notify
+  initial_state: true
+  trigger:
+  - entity_id: device_tracker.danielas_iphone
+    event: enter
+    platform: zone
+    zone: zone.home
+  - entity_id: device_tracker.danielas_iphone
+    event: leave
+    platform: zone
+    zone: zone.home
+  - entity_id: device_tracker.danielas_iphone
+    event: enter
+    platform: zone
+    zone: zone.school
+  - entity_id: device_tracker.danielas_iphone
+    event: leave
+    platform: zone
+    zone: zone.school
+  - entity_id: device_tracker.danielas_iphone
+    event: enter
+    platform: zone
+    zone: zone.lake
+  - entity_id: device_tracker.danielas_iphone
+    event: leave
+    platform: zone
+    zone: zone.lake
+  action:
+  - data:
+      message: Daniela is {{ states('device_tracker.danielas_iphone') }}
+    service: notify.ios_lars_se
+- id: lars_location
+  alias: lars location change notify
+  initial_state: true
+  trigger:
+  - entity_id: device_tracker.lars_se
+    event: enter
+    platform: zone
+    zone: zone.home
+  - entity_id: device_tracker.lars_se
+    event: leave
+    platform: zone
+    zone: zone.home
+  - entity_id: device_tracker.lars_se
+    event: enter
+    platform: zone
+    zone: zone.school
+  - entity_id: device_tracker.lars_se
+    event: leave
+    platform: zone
+    zone: zone.school
+  - entity_id: device_tracker.lars_se
+    event: enter
+    platform: zone
+    zone: zone.lake
+  - entity_id: device_tracker.lars_se
+    event: leave
+    platform: zone
+    zone: zone.lake
+  action:
+  - data:
+      message: Lars is {{ states('device_tracker.lars_se') }}
+    service: notify.ios_lars_se
+- id: frontdoor_ding
+  alias: frontdoor ring
+  initial_state: false
+  trigger:
+  - entity_id: binary_sensor.ring_front_door_ding
+    platform: state
+    from: 'off'
+    to: 'on'
+  action:
+  - data:
+      data:
+        attachment:
+          content-type: jpeg
+        entity_id: camera.front_door
+        push:
+          badge: 5
+          category: camera
+      message: Frontdoor doorbell rings
+    service: notify.ios_lars_se
+- id: frontdoor_motion
+  alias: frontdoor motion
+  initial_state: false
+  trigger:
+  - entity_id: binary_sensor.ring_front_door_motion
+    platform: state
+    from: 'off'
+    to: 'on'
+  action:
+  - data:
+      data:
+        attachment:
+          content-type: jpeg
+        entity_id: camera.front_door
+        push:
+          badge: 5
+          category: camera
+      message: Frontdoor detected motion
+    service: notify.ios_lars_se
+- id: driveway_motion
+  alias: driveway motion
+  initial_state: false
+  trigger:
+  - entity_id: binary_sensor.ring_driveway_motion
+    platform: state
+    from: 'off'
+    to: 'on'
+  action:
+  - data:
+      data:
+        attachment:
+          content-type: jpeg
+        entity_id: camera.driveway
+        push:
+          badge: 5
+          category: camera
+      message: Driveway detected motion
+    service: notify.ios_lars_se
+- id: laconia_driveway_motion
+  alias: laconia driveway motion
+  initial_state: false
+  trigger:
+  - entity_id: binary_sensor.ring_laconiaring_motion
+    platform: state
+    from: 'off'
+    to: 'on'
+  action:
+  - data:
+      data:
+        attachment:
+          content-type: jpeg
+        entity_id: camera.laconiaring
+        push:
+          badge: 5
+          category: camera
+      message: Laconia Driveway detected motion
+    service: notify.ios_lars_se
+- id: f2_motion
+  alias: Foscam2 Motion
+  trigger:
+  - entity_id: binary_sensor.foscam2_motion
+    from: 'off'
+    platform: state
+    to: 'on'
+  action:
+  - data:
+      data:
+        attachment:
+          content-type: jpeg
+        entity_id: camera.arlington
+        push:
+          badge: 0
+          category: camera
+        action_data:
+          entity_id: switch.foscam2_motiondetect
+      message: Motion detected in Arlington
+    service: notify.ios_lars_se
+  - data:
+      message: request_location_update
+    service: notify.ios_danielas_iphone
+- id: f1_motion
+  alias: Foscam1 Motion
+  trigger:
+  - entity_id: binary_sensor.foscam1_motion
+    from: 'off'
+    platform: state
+    to: 'on'
+  action:
+  - data:
+      data:
+        attachment:
+          content-type: jpeg
+        entity_id: camera.lacfamily
+        push:
+          badge: 5
+          category: camera
+      message: Motion detected in Laconia
+    service: notify.ios_lars_se
+- id: f5_motion
+  alias: Foscam5 Motion
+  trigger:
+  - entity_id: binary_sensor.foscam5_motion
+    from: 'off'
+    platform: state
+    to: 'on'
+  action:
+  - data:
+      data:
+        attachmentnnodb-buffer-pool-sizeinnodb-buffer-pool-sizellll,nnodb-buffer-pool-size:
+          content-type: jpeg
+        entity_id: camera.lacmain
+        push:
+          badge: 5
+          category: camera
+      message: Motion detected in Laconia
+    service: notify.ios_lars_se
+- id: f6_motion
+  alias: Foscam6 Motion
+  trigger:
+  - entity_id: binary_sensor.foscam6_motion
+    from: 'off'
+    platform: state
+    to: 'on'
+  action:
+  - data:
+      data:
+        attachment:
+          content-type: jpeg
+        entity_id: camera.lake
+        push:
+          badge: 5
+          category: camera
+      message: Motion detected in Laconia
+    service: notify.ios_lars_se
+- id: doorbell
+  alias: school doorbell
+  trigger:
+  - platform: state
+    entity_id: binary_sensor.doorbell
+  action:
+    service: notify.ios_lars_se
+    data:
+      message: Somebody is at the school door
+      data:
+        attachment:
+          content-type: jpeg
+        push:
+          badge: 5
+          category: camera
+        action_data:
+          entity_id: binary_sensor.school_door
+          my_custom_data: 'on'
+        entity_id: camera.arlington
+- id: disable_camera
+  alias: disable camera
+  trigger:
+  - event_data:
+      actionName: DISABLE_MOTIONDETECT
+    event_type: ios.notification_action_fired
+    platform: event
+  action:
+  - data:
+      message: disabling motiondetect
+    service: notify.ios_lars_se
+- id: tts
+  alias: say stuff
+  trigger:
+  - entity_id: sensor.tts_input
+    platform: state
+  condition:
+  - condition: template
+    value_template: '{{ not is_state(''sensor.tts_input'', '''') }}'
+  action:
+  - data_template:
+      delay: 00:00:05
+      entity: '{{ states.sensor.tts_input.attributes.entity }}'
+      volume: 0.3
+    service: script.sonos_say
+  initial_state: true
+- id: driveway_video
+  alias: Driveway Video
+  trigger:
+  - entity_id: sensor.ring_driveway_last_activity
+    platform: state
+  condition:
+  - condition: state
+    entity_id: binary_sensor.somebody_home
+    state: 'off'
+  action:
+  - data_template:
+      overwrite: false
+      subdir: driveway
+      url: '{{ states.camera.driveway.attributes.video_url }}'
+    service: downloader.download_file
+- id: door_video
+  alias: Frontdoor Video
+  trigger:
+  - entity_id: sensor.ring_front_door_last_activity
+    platform: state
+  condition:
+  - condition: state
+    entity_id: binary_sensor.somebody_home
+    state: 'off'
+  action:
+  - data_template:
+      filename: '{{ states.camera.front_door.attributes.video_id }}'
+      overwrite: false
+      subdir: ring
+      url: '{{ states.camera.front_door.attributes.video_url }}'
+    service: downloader.download_file
+- id: laconia_ring_video
+  alias: RingLaconia Video
+  trigger:
+  - entity_id: sensor.ring_laconiaring_last_activity
+    platform: state
+  condition:
+  - condition: state
+    entity_id: binary_sensor.somebody_lake
+    state: 'off'
+  action:
+    service: downloader.download_file
+    data_template:
+      url: '{{ states.camera.laconiaring.attributes.video_url }}'
+      subdir: laconiaring
+      overwrite: false
+- id: leave_lake
+  alias: Leave Lake
+  trigger:
+  - above: '10'
+    entity_id: proximity.lake
+    platform: numeric_state
+  action:
+  - data: {}
+    service: script.arm_lake
+  - data:
+      away_mode: 'true'
+      entity_id: climate.upstairs
+    service: climate.set_away_mode
+  condition:
+  - condition: state
+    entity_id: binary_sensor.somebody_lake
+    state: 'off'
+- action:
+  - data:
+      message: windmeter changed to {{ states('sensor.windmeter') }}
+    service: notify.ios_lars_se
+  alias: windmeter change
+  condition: []
+  id: '1512969375647'
+  trigger:
+  - entity_id: sensor.windmeter
+    platform: state
+- id: '1513741318407'
+  alias: LeaveHome
+  trigger:
+  - entity_id: device_tracker.lars_se
+    event: leave
+    platform: zone
+    zone: zone.home
+  - entity_id: device_tracker.danielas_iphone
+    event: leave
+    platform: zone
+    zone: zone.home
+  condition:
+  - condition: state
+    entity_id: binary_sensor.somebody_home
+    state: 'off'
+  action:
+  - data:
+      entity_id: switch.foscam2_motiondetect
+    service: switch.turn_on
+  - data:
+      entity_id: group.lights_rooms_arlington
+    service: light.turn_off
+  - data:
+      entity_id: switch.foscam4_motiondetect
+    service: switch.turn_on
+  - data:
+      entity_id: switch.meter1
+    service: switch.turn_off
+  - data:
+      away_mode: true
+      entity_id: group.ecobee
+    service: climate.set_away_mode
+  - before: '13:00'
+    weekday:
+    - mon
+    - tue
+    - thu
+    - fri
+    - sat
+    - sun
+    condition: time
+  - condition: state
+    entity_id: input_boolean.molly_today
+    state: 'off'
+  - data:
+      event: molly_start
+    service: ifttt.trigger
+- id: '1513741393441'
+  alias: ComeHome
+  trigger:
+  - entity_id: binary_sensor.somebody_home
+    from: 'off'
+    platform: state
+    to: 'on'
+  action:
+  - data: {}
+    service: script.come_home
+  - data:
+      away_mode: false
+      entity_id: group.ecobee
+    service: climate.set_away_mode
+  - data: {}
+    service: python_script.welcome
+- id: '1513741552872'
+  alias: ComeLake
+  trigger:
+  - entity_id: binary_sensor.somebody_lake
+    from: 'off'
+    platform: state
+    to: 'on'
+  condition: []
+  action:
+  - data: {}
+    service: script.disarm_lake
+  - data:
+      away_mode: 'false'
+      entity_id: climate.upstairs
+    service: climate.set_away_mode
+  - after: sunset
+    condition: sun
+  - data:
+      entities: group.lights_rooms_laconia
+    service: light.turn_on
+- id: '1516122353323'
+  alias: TooCold
+  trigger:
+  - entity_id: binary_sensor.too_cold
+    from: 'off'
+    platform: state
+    to: 'on'
+  condition: []
+  action:
+  - data:
+      message: Laconia temp fell below 57F!
+    service: notify.ios_lars_se
+  - data:
+      message: Laconia temp fell below 57F!
+    service: notify.ios_danielas_iphone
+  - data:
+      event: too_cold
+    service: ifttt.trigger
+- action:
+  - data: {}
+    service: python_script.welcome
+  - delay: '10'
+  - data:
+      delay: 00:00:02
+      entity: media_player.living_room
+      volume: '0.5'
+    service: script.sonos_say
+  alias: Welcome Home
+  condition: []
+  id: '1516226485722'
+  trigger:
+  - entity_id: device_tracker.lars_se
+    event: enter
+    platform: zone
+    zone: zone.home
+  - entity_id: device_tracker.danielas_iphone
+    event: enter
+    platform: zone
+    zone: zone.home
+- id: '1516487261296'
+  alias: Sunset Arlington
+  trigger:
+  - entity_id: sun.sun
+    platform: state
+    to: below_horizon
+  condition:
+  - condition: state
+    entity_id: binary_sensor.somebody_home
+    state: 'on'
+  action:
+  - data:
+      entity_id: light.kuche
+    service: light.turn_on
+  - data:
+      entity_id: light.dimmable_light_1
+    service: light.turn_on
+  - data:
+      entity_id: switch.meter1
+    service: switch.turn_on
+- id: '1516577077457'
+  alias: HeatSunroom
+  trigger:
+  - below: '57'
+    entity_id: sensor.sun_room_thermostat_temperature
+    platform: numeric_state
+  condition: []
+  action:
+  - data:
+      entity_id: switch.meter2
+    service: switch.turn_on
+- id: noheatsunroom
+  alias: NoHeatSunroom
+  trigger:
+  - above: '56'
+    entity_id: sensor.sun_room_thermostat_temperature
+    platform: numeric_state
+  condition: []
+  action:
+  - data:
+      entity_id: switch.meter2
+    service: switch.turn_off
+- action:
+  - data:
+      event: smoke
+    service: ifttt.trigger
+  - data:
+      message: smoke detected in Laconia!
+    service: notify.ios_lars_se
+  - data:
+      message: smoke detected in Laconia!
+    service: notify.ios_danielas_iphone
+  alias: Smoke
+  condition: []
+  id: '1516624728675'
+  trigger:
+  - entity_id: binary_sensor.laconia_fire
+    platform: state
+    to: 'on'
+- id: '1543166833430'
+  alias: CheckEcobee
+  trigger:
+  - entity_id: binary_sensor.office_online
+    from: 'on'
+    platform: state
+    to: 'off'
+  condition: []
+  action:
+  - data:
+      message: ecobee offline
+    service: notify.ios_lars_se
+- id: '1544485047727'
+  alias: Bedtime
+  trigger:
+  - at: 0:00
+    platform: time
+  condition: []
+  action:
+  - delay: '{{ (range(0, 2)|random|int) }}:{{ (range(1, 59)|random|int) }}:00'
+  - service: script.bedtime
+- id: '1544501084410'
+  alias: FakePresence
+  trigger:
+  - event: sunset
+    offset: 0:30:00
+    platform: sun
+  condition:
+  - condition: state
+    entity_id: binary_sensor.somebody_home
+    state: 'off'
+  action:
+  - data:
+      entity_id: light.kuche, light.base_a1, light.fire_1
+    service: light.turn_on
+  - delay: '{{ (range(0, 2)|random|int) }}:{{ (range(1, 59)|random|int) }}:00'
+- id: ifttt
+  alias: Ifttt_inbound
+  trigger:
+  - event_data:
+      action: call_service
+    event_type: ifttt_webhook_received
+    platform: event
+  action:
+  - data_template:
+      entity_id: '{{ trigger.event.data.entity_id }}'
+    service_template: '{{ trigger.event.data.service }}'
+- id: '1544581600826'
+  alias: MollyNobodyHome
+  trigger:
+  - at: '8:45'
+    platform: time
+  condition:
+  - weekday:
+    - mon
+    - tue
+    - thu
+    - fri
+    - sat
+    - sun
+    condition: time
+  - condition: state
+    entity_id: binary_sensor.somebody_home
+    state: 'off'
+  action:
+  - data:
+      event: molly_start
+    service: ifttt.trigger
+- id: '1544583849966'
+  alias: ResetMollyToday
+  trigger:
+  - at: 0:00
+    platform: time
+  condition: []
+  action:
+  - data:
+      entity_id: input_boolean.molly_today
+    service: input_boolean.turn_off
+- id: '1544584819349'
+  alias: GuteNachtLara
+  trigger:
+  - at: '21:30'
+    platform: time
+  condition:
+  - condition: state
+    entity_id: binary_sensor.lara_occupancy
+    state: 'on'
+  action:
+  - alias: ''
+    data: {}
+    service: python_script.gutenacht
+- id: '1544889832722'
+  alias: OccupancyChange
+  trigger:
+  - entity_id: binary_sensor.kitchen_occupancy
+    platform: state
+  - entity_id: binary_sensor.bedrooms_occupancy
+    platform: state
+  - entity_id: binary_sensor.lara_occupancy
+    platform: state
+  - entity_id: binary_sensor.office_occupancy
+    platform: state
+  - entity_id: binary_sensor.here_occupancy
+    platform: state
+  - entity_id: binary_sensor.playroom_occupancy
+    platform: state
+  condition: []
+  action:
+  - data_template:
+      message: '{{ trigger.entity_id }} is {{ trigger.to_state.state }}'
+    service: notify.ios_lars_se

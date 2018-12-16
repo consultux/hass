@@ -1,0 +1,41 @@
+device_tracker.backup_iphone:
+  hidden: true
+#zone.home:
+#  beacon:
+#    major: 10
+#    minor: 48
+#    uuid: FDA50693-A4E2-4FB1-AFCF-C6EB07647825
+#  track_ios: true
+device_tracker.1921681179:
+  hidden: true
+device_tracker.1921681189:
+  hidden: true
+device_tracker.19216810112:
+  hidden: true
+device_tracker.19216810113:
+  hidden: true
+input_boolean.door_open:
+  hidden: true
+device_tracker.192168134_10:
+  hidden: true
+device_tracker.192168134_13:
+  hidden: true
+device_tracker.192168134_11:
+  hidden: true
+device_tracker.192168134_9:
+  hidden: true
+group.all_switches:
+  hidden: false
+  assumed_state: false
+group.all_automations:
+  hidden: false
+group.all_scripts:
+  hidden: false
+script.bedtime:
+  order: 1
+binary_sensor.furnace:
+  order: 1
+binary_sensor.heat_all:
+  order: 2
+weather.here:
+  friendly_name: Arlington

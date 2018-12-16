@@ -1,0 +1,782 @@
+homeassistant:
+  # Name of the location where Home Assistant is running
+  # Location required to calculate the time the sun rises and sets
+  latitude: !secret lat
+  longitude: !secret lon
+  # Impacts weather/sunrise data (altitude above sea level in meters)
+  elevation: 87
+  # metric for Metric, imperial for Imperial
+  unit_system: imperial
+  # Pick yours from here: http://en.wikipedia.org/wiki/List_of_tz_database_time_zones
+  time_zone: America/New_York
+  
+  # Customization file
+  customize: !include customize.yaml
+    
+  name: Hass
+
+# Enables the frontend
+frontend:
+
+# Enables configuration UI
+config:
+
+http:
+  # Secrets are defined in the file secrets.yaml
+  api_password: !secret http_password
+  # Uncomment this if you are using SSL/TLS, running in Docker container, etc.
+  # base_url: example.duckdns.org:8123
+  base_url: !secret base_url
+
+# Checks for available updates
+# Note: This component will send some information about your system to
+# the developers to assist with development of Home Assistant.
+# For more information, please see:
+# https://home-assistant.io/blog/2016/10/25/explaining-the-updater/
+updater:
+  # Optional, allows Home Assistant developers to focus on popular components.
+  # include_used_components: true
+
+logger:
+  default: error
+  logs:
+    homeassistant.components.core: info
+    homeassistant.components.ring: warning
+    homeassistant.helpers.entity: error
+    homeassistant.components.sensor.scrape: error
+    homeassistant.components.binary_sensor.command_line: error
+#    homeassistant.components.switch: info
+    homeassistant.components.light: info
+    homeassistant.components.owntracks: debug
+    homeassistant.components.device_tracker: debug
+
+ios:
+  push:
+    categories:
+      - name: Camera
+        identifier: 'camera'
+        actions:
+          - identifier: 'DISABLE_MOTIONDETECT'
+            title: 'Disable Motion Detection'
+            activationMode: background
+            authenticationRequired: no
+            destructive: no
+            behavior: 'default'
+#            textInputButtonTitle: 'Question?'
+#            textInputPlaceholder: 'How can I help you?'
+
+# Discover some devices automatically
+discovery:
+  ignore: 
+    - philips_hue
+    - apple_tv
+
+recorder:
+  db_url: !secret db_url
+  purge_keep_days: 10
+  exclude:
+    entities:
+      - sun.sun
+      - binary_sensor.iss
+      - media_player.sonos
+      - sensor.meter1
+      - sensor.meter2
+
+prometheus:
+  exclude:
+    entities:
+      - sun.sun
+      - binary_sensor.iss
+
+hue:
+  bridges:
+    - host: 192.168.1.16
+      filename: phueA.conf
+    - host: 192.168.1.160
+      filename: phue.conf
+
+# Allows you to issue voice commands from the frontend in enabled browsers
+conversation:
+
+# Enables support for tracking state changes over time
+history:
+
+# View all events in a logbook
+logbook:
+
+ecobee:
+  api_key: !secret ecobee_api_key
+
+ring:
+  username: !secret ring_user
+  password: !secret ring_password
+
+downloader:
+  download_dir: downloads
+
+camera:
+  - platform: ring
+  - platform: foscam
+    ip: 192.168.1.62
+    port: 80
+    username: !secret foscam_user
+    password: !secret foscam_password
+    name: Arlington
+
+  - platform: foscam
+    ip: 192.168.1.65
+    port: 80
+    username: !secret foscam_user
+    password: !secret foscam_password
+    name: LacMain
+
+
+  - platform: foscam
+    ip: 192.168.1.61
+    port: 80
+    username: !secret foscam_user
+    password: !secret foscam_password
+    name: LacFamily
+
+  - platform: foscam
+    ip: 192.168.10.64
+    port: 80
+    username: !secret foscam_user
+    password: !secret foscam_password
+    name: Bed 
+
+  - platform: foscam
+    ip: 192.168.1.66
+    port: 80
+    username: !secret foscam_user
+    password: !secret foscam_password
+    name: Lake
+
+
+  - platform: arlo
+    ffmpeg_arguments: '-pred 1 -q:v 2'
+
+ffmpeg:
+  ffmpeg_bin: /usr/bin/ffmpeg
+
+arlo:
+  username: !secret arlo_user
+  password: !secret arlo_password
+
+alarm_control_panel:
+  - platform: arlo
+    home_mode_name: Disarmed
+    away_mode_name: ArmedRecord
+
+sonos:
+  media_player: 
+    hosts: 192.168.10.20,192.168.10.21,192.168.10.22,192.168.10.23
+
+# Enables a map showing the location of tracked devices
+map:
+
+# Track the sun
+sun:
+
+mqtt:
+  broker: "192.168.1.85"
+
+binary_sensor:
+  - platform: ping
+    host: 192.168.1.40
+    name: here_online
+    scan_interval: 15
+  - platform: ping
+    host: 192.168.10.41
+    name: playroom_online
+    scan_interval: 15
+  - platform: ping
+    host: 192.168.10.42
+    name: office_online
+    scan_interval: 15
+  - platform: ping
+    host: 192.168.10.43
+    name: bedrooms_online
+    scan_interval: 15
+#  - platform: iss
+#    show_on_map: true
+  - platform: mqtt
+    state_topic: "homeassist/furnace"
+    name: "furnace"
+  - platform: mqtt
+    state_topic: "school/doorbell"
+    name: "doorbell"
+#  - platform: http
+#    name: school_door
+  - platform: ring
+  - platform: command_line
+    name: "foscam2 motion"
+    command: '/usr/local/bin/foscamcontrol 192.168.1.62 state'
+    value_template: >-
+      {%- if value == "2" -%}
+        ON
+      {%- else -%}
+        OFF
+      {%- endif -%}
+    device_class: motion
+    scan_interval: 5
+  - platform: command_line
+    name: "foscam1 motion"
+    command: '/usr/local/bin/foscamcontrol 192.168.1.61 state'
+    value_template: >-
+      {%- if value == "2" -%}
+        ON
+      {%- else -%}
+        OFF
+      {%- endif -%}
+    device_class: motion
+    scan_interval: 5
+  - platform: command_line
+    name: "foscam5 motion"
+    command: '/usr/local/bin/foscamcontrol 192.168.1.65 state'
+    value_template: >-
+      {%- if value == "2" -%}
+        ON
+      {%- else -%}
+        OFF
+      {%- endif -%}
+    device_class: motion
+    scan_interval: 5
+  - platform: command_line
+    name: "foscam6 motion"
+    command: '/usr/local/bin/foscamcontrol 192.168.1.66 state'
+    value_template: >-
+      {%- if value == "2" -%}
+        ON
+      {%- else -%}
+        OFF
+      {%- endif -%}
+    device_class: motion
+    scan_interval: 5
+  - platform: template
+    sensors:
+      arl_away_mode:
+        #device_class: presence
+        value_template: "{{ is_state_attr('climate.here', 'away_mode', 'on') }}"
+        friendly_name: Away Mode
+      sun_room_heat:
+        device_class: heat
+        value_template: "{{ is_state('sensor.sun_room_thermostat_hvac_state', 'heating') }}"
+        friendly_name: Sunroom
+      dining_room_heat:
+        device_class: heat
+        value_template: "{{ is_state('sensor.dining_room_thermostat_hvac_state', 'heating') }}"
+        friendly_name: Diningroom
+      living_room_heat:
+        device_class: heat
+        value_template: "{{ is_state('sensor.living_room_thermostat_hvac_state', 'heating') }}"
+        friendly_name: Livingroom
+      family_room_heat:
+        device_class: heat
+        value_template: "{{ is_state('sensor.family_room_thermostat_hvac_state', 'heating') }}"
+        friendly_name: Familyroom
+      upstairs_heat:
+        device_class: heat
+        value_template: "{{ is_state('sensor.upstairs_thermostat_hvac_state', 'heating') }}"
+        friendly_name: Upstairs
+      master_bath_heat:
+        device_class: heat
+        value_template: "{{ is_state('sensor.master_bath_thermostat_hvac_state', 'heating') }}"
+        friendly_name: Masterbath
+      playroom_heat:
+        device_class: heat
+        value_template: "{{ is_state_attr('climate.playroom', 'operation', 'heat') }}"
+        friendly_name: Playroom
+      here_heat:
+        device_class: heat
+        value_template: "{{ is_state_attr('climate.here', 'operation', 'heat') }}"
+        friendly_name: Here
+      office_heat:
+        device_class: heat
+        value_template: "{{ is_state_attr('climate.office', 'operation', 'heat') }}"
+        friendly_name: Office
+      bedrooms_heat:
+        device_class: heat
+        value_template: "{{ is_state_attr('climate.bedrooms', 'operation', 'heat') }}"
+        friendly_name: Bedrooms
+      heat_arl:
+        friendly_name: Heat Requested
+        device_class: heat
+        value_template: >-
+          {{ is_state_attr('climate.here', 'operation', 'heat')
+             or is_state_attr('climate.office', 'operation', 'heat')
+             or is_state_attr('climate.playroom', 'operation', 'heat') }}
+      heat_all:
+        friendly_name: Heat Requested
+        device_class: heat
+        entity_id:
+          - sensor.sun_room_thermostat_hvac_state
+          - sensor.dining_room_thermostat_hvac_state
+          - sensor.living_room_thermostat_hvac_state
+          - sensor.family_room_thermostat_hvac_state
+          - sensor.upstairs_thermostat_hvac_state
+          - sensor.master_bath_thermostat_hvac_state
+        value_template: >-
+          {{ is_state('sensor.master_bath_thermostat_hvac_state', 'heating')
+             or is_state('sensor.sun_room_thermostat_hvac_state', 'heating')
+             or is_state('sensor.dining_room_thermostat_hvac_state', 'heating')
+             or is_state('sensor.living_room_thermostat_hvac_state', 'heating')
+             or is_state('sensor.family_room_thermostat_hvac_state', 'heating')
+             or is_state('sensor.upstairs_thermostat_hvac_state', 'heating') }}
+      too_cold:
+        friendly_name: Too Cold
+        device_class: cold
+        entity_id:
+          - sensor.sun_room_thermostat_temperature
+          - sensor.dining_room_thermostat_temperature
+          - sensor.living_room_thermostat_temperature
+          - sensor.family_room_thermostat_temperature
+          - sensor.upstairs_thermostat_temperature
+          - sensor.master_bath_thermostat_temperature
+        value_template: >-
+          {{ states('sensor.master_bath_thermostat_temperature')|float < 55 
+             or states('sensor.sun_room_thermostat_temperature')|float < 55
+             or states('sensor.dining_room_thermostat_temperature')|float < 55
+             or states('sensor.living_room_thermostat_temperature')|float < 55
+             or states('sensor.family_room_thermostat_temperature')|float < 55
+             or states('sensor.upstairs_thermostat_temperature')|float < 55 }}
+      somebody_home: 
+        friendly_name: Somebody Home
+        device_class: presence
+        entity_id:
+          - device_tracker.lars_se
+          - device_tracker.danielas_iphone
+        value_template: >-
+          {{ is_state('device_tracker.lars_se', 'home')
+             or is_state('device_tracker.danielas_iphone', 'home') }} 
+      somebody_lake: 
+        friendly_name: Somebody Lake
+        device_class: presence
+        entity_id:
+          - device_tracker.lars_se
+          - device_tracker.danielas_iphone
+        value_template: >-
+          {{ is_state('device_tracker.lars_se', 'Lake')
+             or is_state('device_tracker.danielas_iphone', 'Lake') }} 
+      coffee_arlington: 
+        friendly_name: Coffee Counter
+        device_class: power
+        value_template: "{{ states('sensor.meter1_energy')|float > 1000 }}"
+      laconia_fire:
+        friendly_name: Smoke / Fire
+        device_class: smoke
+        entity_id:
+          - sensor.sun_room_nest_protect_smoke_status
+          - sensor.sun_room_nest_protect_co_status
+          - sensor.upstairs_nest_protect_smoke_status
+          - sensor.upstairs_nest_protect_co_status
+        value_template: >-
+          {{ is_state('sensor.sun_room_nest_protect_smoke_status') 
+             or is_state('sensor.sun_room_nest_protect_co_status') 
+             or is_state('sensor.upstairs_nest_protect_co_status') 
+             or is_state('sensor.upstairs_nest_protect_smoke_status') }}
+    
+switch:
+  - platform: orvibo
+  - platform: tplink
+    host: 192.168.10.19
+    name: meter1
+  - platform: tplink
+    host: 192.168.1.19
+    name: meter2
+  - platform: command_line
+    switches:
+      foscam2_motiondetect:
+        command_on: '/usr/local/bin/foscamcontrol1 192.168.1.62 on'
+        command_off: '/usr/local/bin/foscamcontrol1 192.168.1.62 off'
+        command_state: '/usr/local/bin/foscamcontrol1 192.168.1.62 detect'
+        value_template: '{{ value != "0" }}'
+      foscam1_motiondetect:
+        command_on: '/usr/local/bin/foscamcontrol 192.168.1.61 on'
+        command_off: '/usr/local/bin/foscamcontrol 192.168.1.61 off'
+        command_state: '/usr/local/bin/foscamcontrol 192.168.1.61 detect'
+        value_template: '{{ value != "0" }}'
+      foscam5_motiondetect:
+        command_on: '/usr/local/bin/foscamcontrol1 192.168.1.65 on'
+        command_off: '/usr/local/bin/foscamcontrol1 192.168.1.65 off'
+        command_state: '/usr/local/bin/foscamcontrol1 192.168.1.65 detect'
+        value_template: '{{ value != "0" }}'
+      foscam6_motiondetect:
+        command_on: '/usr/local/bin/foscamcontrol1 192.168.1.66 on'
+        command_off: '/usr/local/bin/foscamcontrol1 192.168.1.66 off'
+        command_state: '/usr/local/bin/foscamcontrol1 192.168.1.66 detect'
+        value_template: '{{ value != "0" }}'
+      foscam4_motiondetect:
+        command_on: '/usr/local/bin/foscamcontrol 192.168.10.64 on'
+        command_off: '/usr/local/bin/foscamcontrol 192.168.10.64 off'
+        command_state: '/usr/local/bin/foscamcontrol 192.168.10.64 detect'
+        value_template: '{{ value != "0" }}'
+
+# Weather prediction
+sensor:
+  - platform: ring
+  - platform: wunderground
+    api_key: !secret wunderground
+    pws_id: !secret pws_id
+    monitored_conditions:
+      - alerts
+      - temp_f
+      - wind_mph
+      - wind_gust_mph
+      - wind_dir
+      - wind_degrees
+      - feelslike_f
+      - precip_today_in
+      - weather
+  - platform: arlo
+  - platform: history_stats
+    name: Furnace today hr
+    entity_id: binary_sensor.furnace
+    state: 'on'
+    type: time
+    start: '{{ now().replace(hour=0).replace(minute=0).replace(second=0) }}'
+    end: '{{ now() }}'
+  - platform: history_stats
+    name: Furnace today
+    entity_id: binary_sensor.furnace
+    state: 'on'
+    type: count
+    start: '{{ now().replace(hour=0).replace(minute=0).replace(second=0) }}'
+    end: '{{ now() }}'
+  - platform: history_stats
+    name: Furnace yesterday hr
+    entity_id: binary_sensor.furnace
+    state: 'on'
+    type: time
+    end: '{{ now().replace(hour=0).replace(minute=0).replace(second=0) }}'
+    duration:
+      hours: 24
+  - platform: history_stats
+    name: Furnace yesterday 
+    entity_id: binary_sensor.furnace
+    state: 'on'
+    type: count
+    end: '{{ now().replace(hour=0).replace(minute=0).replace(second=0) }}'
+    duration:
+      hours: 24
+  - platform: history_stats
+    name: Coffee today
+    entity_id: binary_sensor.coffee_arlington
+    state: 'on'
+    type: count
+    start: '{{ now().replace(hour=0).replace(minute=0).replace(second=0) }}'
+    end: '{{ now() }}'
+  - platform: history_stats
+    name: Here outages today
+    entity_id: binary_sensor.here_online
+    state: 'off'
+    type: count
+    start: '{{ now().replace(hour=0).replace(minute=0).replace(second=0) }}'
+    end: '{{ now() }}'
+  - platform: history_stats
+    name: Here outages yesterday 
+    entity_id: binary_sensor.here_online
+    state: 'off'
+    type: count
+    end: '{{ now().replace(hour=0).replace(minute=0).replace(second=0) }}'
+    duration:
+      hours: 24
+  - platform: history_stats
+    name:  Playroom outages today
+    entity_id: binary_sensor.playroom_online
+    state: 'off'
+    type: count
+    start: '{{ now().replace(hour=0).replace(minute=0).replace(second=0) }}'
+    end: '{{ now() }}'
+  - platform: history_stats
+    name: Playroom outages yesterday 
+    entity_id: binary_sensor.playroom_online
+    state: 'off'
+    type: count
+    end: '{{ now().replace(hour=0).replace(minute=0).replace(second=0) }}'
+    duration:
+      hours: 24
+  - platform: history_stats
+    name: Office outages today
+    entity_id: binary_sensor.office_online
+    state: 'off'
+    type: count
+    start: '{{ now().replace(hour=0).replace(minute=0).replace(second=0) }}'
+    end: '{{ now() }}'
+  - platform: history_stats
+    name: Office outages yesterday 
+    entity_id: binary_sensor.office_online
+    state: 'off'
+    type: count
+    end: '{{ now().replace(hour=0).replace(minute=0).replace(second=0) }}'
+    duration:
+      hours: 24
+  - platform: history_stats
+    name: Bedrooms outages today
+    entity_id: binary_sensor.bedrooms_online
+    state: 'off'
+    type: count
+    start: '{{ now().replace(hour=0).replace(minute=0).replace(second=0) }}'
+    end: '{{ now() }}'
+  - platform: history_stats
+    name: Bedrooms outages yesterday 
+    entity_id: binary_sensor.bedrooms_online
+    state: 'off'
+    type: count
+    end: '{{ now().replace(hour=0).replace(minute=0).replace(second=0) }}'
+    duration:
+      hours: 24
+#  - platform: http
+#    name: tts_input
+#  - platform: scrape
+#    name: windmeter
+#    resource: http://192.168.1.178/livedata.htm
+#    select: "input[name='Outdoor1ID']"
+#    attribute: value
+
+#    FIXME: re-activate water sensor in spring
+#  - platform: mqtt
+#    state_topic: "/huzzah2/status"
+#    name: watersensor
+#    value_template: ' {{ value_json.battery | float }} '
+#    unit_of_measurement: "mV"
+#  - platform: mqtt
+#    state_topic: "/huzzah2/status"
+#    name: water
+#    unit_of_measurement: "°C"
+#    value_template: ' {{ value_json.wtemp }} '
+#    END FIXME
+    
+  - platform: mqtt
+    state_topic: "weatherstation/live"
+    name: windmeter
+    value_template: ' {{ value_json.Outdoor1ID }} '
+  - platform: mqtt
+    state_topic: "weatherstation/live"
+    name: indoor
+    value_template: ' {{ value_json.inTemp }} '
+    unit_of_measurement: "°F"
+  - platform: mqtt
+    state_topic: "weatherstation/live"
+    name: outdoor
+    value_template: ' {{ value_json.outTemp }} '
+    unit_of_measurement: "°F"
+  - platform: template
+    sensors:
+      ram_fuel:
+        value_template: "{{ state_attr('device_tracker.2019_ram_1500','fuel_level') }}"
+        friendly_name: RAM Fuel
+#        unit_of_measurement: "°"
+        unit_of_measurement: "%"
+      atlas_fuel:
+        value_template: "{{ state_attr('device_tracker.2018_volkswagen_atlas','fuel_level') }}"
+        friendly_name: Atlas Fuel
+#        unit_of_measurement: "°"
+        unit_of_measurement: "%"
+      arl_temp:
+        value_template: "{{ states.weather.here.attributes.temperature }}"
+        friendly_name: Temperature
+        unit_of_measurement: "°F"
+      arl_wind:
+        value_template: "{{ states.weather.here.attributes.wind_speed }}"
+        friendly_name: Wind Speed
+        unit_of_measurement: "mph"
+      arl_winddir:
+        value_template: "{{ states.weather.here.attributes.wind_bearing }}"
+        friendly_name: Wind Degrees
+        unit_of_measurement: "°"
+      meter1_energy:
+        friendly_name: Meter1
+        entity_id: switch.meter1
+        unit_of_measurement: W
+        value_template: ' {{ states.switch.meter1.attributes.current_power_w | float }}'
+      meter2_energy:
+        friendly_name: Meter2
+        entity_id: switch.meter2
+        unit_of_measurement: W
+        value_template: ' {{ states.switch.meter2.attributes.current_power_w | float }}'
+
+nest:
+  client_id: !secret nest_id
+  client_secret: !secret nest_secret
+#  binary_sensors:
+#    monitored_conditions:
+#      - 'has_leaf'
+#      - 'online'
+
+# Text to speech
+tts:
+  - platform: google
+
+history_graph:
+  heat_here:
+    name: Here
+    entities: climate.here
+    hours_to_show: 24
+  heat_playroom:
+    name: Playroom
+    entities: climate.playroom
+    hours_to_show: 24
+  heat_office:
+    name: Office
+    entities: climate.office
+    hours_to_show: 24
+  heat_bedrooms:
+    name: Bedrooms
+    entities: climate.bedrooms
+    hours_to_show: 24
+  heat_family:
+    name: Family Room
+    entities: climate.family_room
+    hours_to_show: 24
+  heat_sun:
+    name: Sun Room
+    entities: 
+     - climate.sun_room
+    hours_to_show: 24
+  heat_living:
+    name: Living Room
+    entities: climate.living_room
+    hours_to_show: 24
+  heat_dining:
+    name: Dining Room
+    entities: climate.dining_room
+    hours_to_show: 24
+  heat_upstairs:
+    name: Upstairs
+    entities: climate.upstairs
+    hours_to_show: 24
+  heat_bath:
+    name: Master Bath
+    entities: climate.master_bath
+    hours_to_show: 24
+  heat_state_arl:
+    name: Status Arlington
+    entities:
+     - binary_sensor.heat_here
+     - binary_sensor.heat_playroom
+     - binary_sensor.heat_office
+     - binary_sensor.heat_bedrooms
+  heat_state:
+    name: Status
+    entities:
+     - binary_sensor.furnace
+     - binary_sensor.heat_all
+     - binary_sensor.sun_room_heat
+     - binary_sensor.dining_room_heat
+     - binary_sensor.living_room_heat
+     - binary_sensor.family_room_heat
+     - binary_sensor.upstairs_heat
+     - binary_sensor.master_bath_heat
+    hours_to_show: 24
+  ecobee_status:
+    name: Ecobee Status
+    entities:
+     - binary_sensor.here_heat
+     - binary_sensor.office_heat
+     - binary_sensor.bedrooms_heat
+     - binary_sensor.playroom_heat
+     - binary_sensor.here_online
+     - binary_sensor.office_online
+     - binary_sensor.bedrooms_online
+     - binary_sensor.playroom_online
+    hours_to_show: 24
+
+
+zone:
+  - name: Lake
+    latitude: !secret lake_lat
+    longitude: !secret lake_lon
+    radius: 2000
+    icon: mdi:home-heart
+  - name: Home
+    latitude: !secret home_lat
+    longitude: !secret home_lon
+    radius: 1000
+    icon: mdi:home
+#    passive: true
+  - name: School
+    latitude: !secret school_lat
+    longitude: !secret school_lon
+    radius: 300
+    icon: mdi:school
+
+ifttt:
+  key: !secret ifttt_key
+
+input_boolean:
+  door_open:
+    name: Door Open
+    initial: off
+    icon: mdi:door
+  arl_home:
+    name: Arlington Home
+    initial: off
+    icon: mdi:home
+  molly_today:
+    name: Molly Today
+    initial: off
+
+#device_tracker:
+#  - platform: ping
+#    hosts:
+#      here: 192.168.10.40
+#      playroom: 192.168.10.41
+#    interval: 15
+#    consider_home: 30
+
+device_tracker:
+  - platform: automatic
+    client_id: !secret automatic_id
+    secret: !secret automatic_secret
+#    devices:
+#      - 2007 Honda Element
+#      - 2004 Subaru Impreza
+#  - platform: actiontec
+#    host: !secret actiontec_ip
+#    username: !secret actiontec_user
+#    password: !secret actiontec_password
+#    consider_home: 600
+#    track_new_devices: false
+
+notify:
+  - name: ecobee
+    platform: ecobee
+
+proximity:
+  home:
+    devices:
+      - device_tracker.lars_se
+      - device_tracker.danielas_iphone
+    tolerance: 50
+  lake:
+    zone: lake
+    devices:
+      - device_tracker.lars_se
+      - device_tracker.danielas_iphone
+    tolerance: 50
+owntracks:
+  max_gps_accuracy: 500
+  waypoints: true
+  mqtt_topic: "owntracks/#"
+  events_only: false
+  waypoint_whitelist:
+    - lars
+#    - ram
+  region_mapping:
+    'lars se - -home:FDA50693-A4E2-4FB1-AFCF-C6EB07647825': home
+    'home:FDA50693-A4E2-4FB1-AFCF-C6EB07647825': home
+#    office: work
+
+bmw_connected_drive:
+  name:
+    username: !secret bmw_user
+    password: !secret bmw_password
+    region: north_america
+
+
+python_script:
+
+group: !include groups.yaml
+automation: !include automations.yaml
+script: !include scripts.yaml

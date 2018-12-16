@@ -1,0 +1,107 @@
+sonos_say:
+  alias: Sonos TTS script
+  sequence:
+  - service: media_player.sonos_snapshot
+    data_template:
+      entity_id: '{{ entity }}'
+  - service: media_player.sonos_unjoin
+    data_template:
+      entity_id: '{{ entity }}'
+  - service: media_player.volume_set
+    data_template:
+      entity_id: '{{ entity }}'
+      volume_level: '{{ volume }}'
+  - service: tts.google_say
+    data_template:
+      entity_id: '{{ entity }}'
+      message: '{{ states(''sensor.tts_input'') }}'
+      language: '{{ states.sensor.tts_input.attributes.language }}'
+  - delay: '{{ delay }}'
+  - service: media_player.sonos_restore
+    data_template:
+      entity_id: '{{ entity }}'
+bedtime:
+  alias: Bedtime
+  sequence:
+  - data:
+      entity_id: group.all_lights
+    service: light.turn_off
+  - data:
+      entity_id: switch.meter1
+    service: switch.turn_off
+  - data:
+      entity_id: group.sonos
+    service: media_player.media_stop
+arm_lake:
+  alias: ArmLake
+  sequence:
+  - data:
+      entity_id: alarm_control_panel.laconia
+    service: alarm_control_panel.alarm_arm_away
+  - data:
+      entity_id: switch.foscam1_motiondetect
+    service: switch.turn_on
+  - data:
+      entity_id: switch.foscam5_motiondetect
+    service: switch.turn_on
+  - data:
+      entity_id: group.lights_rooms_laconia
+    service: light.turn_off
+  - data:
+      message: Lake armed!
+    service: notify.ios_lars_se
+disarm_lake:
+  alias: DisarmLake
+  sequence:
+  - data:
+      entity_id: alarm_control_panel.laconia
+    service: alarm_control_panel.alarm_disarm
+  - data:
+      entity_id: switch.foscam1_motiondetect
+    service: switch.turn_off
+  - data:
+      entity_id: switch.foscam5_motiondetect
+    service: switch.turn_off
+  - data:
+      message: Lake disarmed
+    service: notify.ios_lars_se
+come_home:
+  alias: ComeHome
+  sequence:
+  - data:
+      entity_id: switch.foscam2_motiondetect
+    service: switch.turn_off
+  - data:
+      entity_id: switch.foscam4_motiondetect
+    service: switch.turn_off
+  - condition: state
+    entity_id: sun.sun
+    state: below_horizon
+  - data:
+      entity_id: light.kuche
+    service: light.turn_on
+  - data:
+      entity_id: light.dimmable_light_1
+    service: light.turn_on
+  - data:
+      entity_id: switch.meter1
+    service: switch.turn_on
+'1516486767614':
+  alias: ComeLake
+  sequence:
+  - data: {}
+    service: script.disarm_lake
+'1519047883861':
+  alias: Daniela Location Update
+  sequence:
+  - data:
+      message: request_location_update
+    service: notify.ios_danielas_iphone
+nest_update_eta:
+  alias: set Lake ETA
+  sequence:
+  - service: nest.set_eta
+    data:
+      eta: 04:00:00
+      eta_window: 00:10
+      trip_id: going_up
