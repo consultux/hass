@@ -82,10 +82,23 @@
     - group.ecobee
     - group.occupancy_arl
     - group.outages
+    - group.arl_burn
     - history_graph.here
     - history_graph.office
     - history_graph.bedrooms
     - history_graph.playroom
+
+ arl_burn:
+  name: Heat Requested
+  entities:
+    - sensor.arlington1_today
+    - sensor.arlington1_today_hr
+    - sensor.arlington1_yesterday
+    - sensor.arlington1_yesterday_hr
+    - sensor.arlington2_today
+    - sensor.arlington2_today_hr
+    - sensor.arlington2_yesterday
+    - sensor.arlington2_yesterday_hr
 
  outages:
   name: Outages

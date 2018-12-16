@@ -49,6 +49,7 @@ logger:
     homeassistant.components.light: info
     homeassistant.components.owntracks: debug
     homeassistant.components.device_tracker: debug
+    homeassistant.components.automatic: debug
 
 ios:
   push:
@@ -429,6 +430,66 @@ sensor:
       - precip_today_in
       - weather
   - platform: arlo
+  - platform: history_stats
+    name: Arlington2 today hr
+    entity_id: binary_sensor.bedrooms_heat
+    state: 'on'
+    type: time
+    start: '{{ now().replace(hour=0).replace(minute=0).replace(second=0) }}'
+    end: '{{ now() }}'
+  - platform: history_stats
+    name: Arlington2 today
+    entity_id: binary_sensor.bedrooms_heat
+    state: 'on'
+    type: count
+    start: '{{ now().replace(hour=0).replace(minute=0).replace(second=0) }}'
+    end: '{{ now() }}'
+  - platform: history_stats
+    name: Arlington2 yesterday hr
+    entity_id: binary_sensor.bedrooms_heat
+    state: 'on'
+    type: time
+    end: '{{ now().replace(hour=0).replace(minute=0).replace(second=0) }}'
+    duration:
+      hours: 24
+  - platform: history_stats
+    name: Arlington2 yesterday 
+    entity_id: binary_sensor.bedrooms_heat
+    state: 'on'
+    type: count
+    end: '{{ now().replace(hour=0).replace(minute=0).replace(second=0) }}'
+    duration:
+      hours: 24
+  - platform: history_stats
+    name: Arlington1 today hr
+    entity_id: binary_sensor.heat_arl
+    state: 'on'
+    type: time
+    start: '{{ now().replace(hour=0).replace(minute=0).replace(second=0) }}'
+    end: '{{ now() }}'
+  - platform: history_stats
+    name: Arlington1 today
+    entity_id: binary_sensor.heat_arl
+    state: 'on'
+    type: count
+    start: '{{ now().replace(hour=0).replace(minute=0).replace(second=0) }}'
+    end: '{{ now() }}'
+  - platform: history_stats
+    name: Arlington1 yesterday hr
+    entity_id: binary_sensor.heat_arl
+    state: 'on'
+    type: time
+    end: '{{ now().replace(hour=0).replace(minute=0).replace(second=0) }}'
+    duration:
+      hours: 24
+  - platform: history_stats
+    name: Arlington1 yesterday 
+    entity_id: binary_sensor.heat_arl
+    state: 'on'
+    type: count
+    end: '{{ now().replace(hour=0).replace(minute=0).replace(second=0) }}'
+    duration:
+      hours: 24
   - platform: history_stats
     name: Furnace today hr
     entity_id: binary_sensor.furnace
