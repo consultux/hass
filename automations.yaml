@@ -472,7 +472,7 @@
       entity_id: light.kuche
     service: light.turn_on
   - data:
-      entity_id: light.dimmable_light_1
+      entity_id: light.porch
     service: light.turn_on
   - data:
       entity_id: switch.meter1
@@ -708,3 +708,36 @@
   - data:
       message: Du solltest tanken gehen!
     service: notify.ios_danielas_iphone
+- id: '1544991801101'
+  alias: atlas_status
+  trigger:
+  - event_data:
+      type: vehicle:status_report
+      vehicle:
+        id: C_bc9aca100b51531f
+    event_type: automatic_update
+    platform: event
+  condition: []
+  action:
+  - data_template:
+      entity_id: input_number.battery_atlas
+      value: '{{ trigger.event.data.vehicle.battery_voltage }}'
+    service: input_number.set_value
+  - data_template:
+      message: 'status report for {{ trigger.event.data.vehicle }}'
+    service: system_log.write
+- id: '1544991801102'
+  alias: ram_status
+  trigger:
+  - event_data:
+      type: vehicle:status_report
+      vehicle:
+        id: C_204c585711de7cbf
+    event_type: automatic_update
+    platform: event
+  condition: []
+  action:
+  - data_template:
+      entity_id: input_number.battery_ram
+      value: '{{ trigger.event.data.vehicle.battery_voltage }}'
+    service: input_number.set_value

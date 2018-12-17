@@ -222,7 +222,7 @@
 
  my_lights:
   name: My Lights
-  entities: light.base_a1,light.base_a2,light.base_c2,light.cave_a1,light.cave_b1,light.cave_b2,light.famfado1,light.famfado2,light.fire_1,light.fire_2,light.float_go,light.hc1,light.hc2,light.hc3,light.hk1,light.hk2,light.here_fado_tv,light.here_strip,light.l1,light.l2,light.l4,light.lb1,light.lb2,light.ls,light.lakebloom1,light.lakebloom2,light.lakefado,light.lakeguest,light.lakehall,light.lakepatio,light.lakestrip,light.living_room,light.oa1,light.oa2,light.ob1,light.oc2,light.dimmable_light_2,light.hue_lightstrip_plus_1,light.dimmable_light_1,light.princess,light.tv_1,light.tv_2,light.tv_3
+  entities: light.base_a1,light.base_a2,light.base_c2,light.cave_a1,light.cave_b1,light.cave_b2,light.famfado1,light.famfado2,light.fire_1,light.fire_2,light.float_go,light.hc1,light.hc2,light.hc3,light.hk1,light.hk2,light.here_fado_tv,light.here_strip,light.l1,light.l2,light.l4,light.lb1,light.lb2,light.ls,light.lakebloom1,light.lakebloom2,light.lakefado,light.lakeguest,light.lakehall,light.lakepatio,light.lakestrip,light.lakebed,light.living_room,light.oa1,light.oa2,light.ob1,light.oc2,light.patio,light.patio_strip,light.porch,light.princess,light.tv_1,light.tv_2,light.tv_3
 
  sonos:
   name: Sonos
@@ -257,6 +257,7 @@
     - device_tracker.2018_volkswagen_atlas
     - sensor.atlas_fuel
     - binary_sensor.atlas_ignition
+    - sensor.atlas_battery
 
  ram:
   name: RAM 1500
@@ -264,3 +265,5 @@
     - device_tracker.2019_ram_1500
     - sensor.ram_fuel
     - binary_sensor.ram_ignition
+    - sensor.ram_battery
+# new comment

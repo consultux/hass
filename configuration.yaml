@@ -303,13 +303,11 @@ binary_sensor:
       atlas_ignition:
         friendly_name: Atlas Ignition
         device_class: moving
-        value_template: >-
-          {{ is_state('input_boolean.atlas_ignition') }}
+        value_template: "{{ is_state('input_boolean.atlas_ignition', 'on') }}"
       ram_ignition:
         friendly_name: RAM Ignition
         device_class: moving
-        value_template: >-
-          {{ is_state('input_boolean.ram_ignition') }}
+        value_template: "{{ is_state('input_boolean.ram_ignition', 'on') }}"
       outage_arl1:
         friendly_name: Outage Arlington1
         value_template: >-
@@ -655,6 +653,14 @@ sensor:
     unit_of_measurement: "°F"
   - platform: template
     sensors:
+      ram_battery:
+        value_template: "{{ states.input_number.battery_ram.state }}"
+        friendly_name: RAM Battery
+        unit_of_measurement: "V"
+      atlas_battery:
+        value_template: "{{ states.input_number.battery_atlas.state }}"
+        friendly_name: Atlas Battery
+        unit_of_measurement: "V"
       ram_fuel:
         value_template: "{{ state_attr('device_tracker.2019_ram_1500','fuel_level') }}"
         friendly_name: RAM Fuel
@@ -800,6 +806,17 @@ zone:
 ifttt:
   key: !secret ifttt_key
 
+input_number:
+  battery_atlas:
+    name: Battery Atlas
+    initial: 0
+    min: 0
+    max: 20
+  battery_ram:
+    name: Battery RAM
+    initial: 0
+    min: 0
+    max: 20
 input_boolean:
   door_open:
     name: Door Open
@@ -858,10 +875,10 @@ proximity:
       - device_tracker.danielas_iphone
     tolerance: 50
 owntracks:
-  max_gps_accuracy: 500
+  max_gps_accuracy: 2000
   waypoints: true
   mqtt_topic: "owntracks/#"
-  events_only: false
+  events_only: true
   waypoint_whitelist:
     - lars
 #    - ram
