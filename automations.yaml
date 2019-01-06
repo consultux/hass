@@ -13,66 +13,22 @@
   initial_state: true
   trigger:
   - entity_id: device_tracker.danielas_iphone
-    event: enter
-    platform: zone
-    zone: zone.home
-  - entity_id: device_tracker.danielas_iphone
-    event: leave
-    platform: zone
-    zone: zone.home
-  - entity_id: device_tracker.danielas_iphone
-    event: enter
-    platform: zone
-    zone: zone.school
-  - entity_id: device_tracker.danielas_iphone
-    event: leave
-    platform: zone
-    zone: zone.school
-  - entity_id: device_tracker.danielas_iphone
-    event: enter
-    platform: zone
-    zone: zone.lake
-  - entity_id: device_tracker.danielas_iphone
-    event: leave
-    platform: zone
-    zone: zone.lake
+    platform: state
   action:
-  - data:
-      message: Daniela is {{ states('device_tracker.danielas_iphone') }}
+  - data_template:
+      message: 'Daniela is {{ trigger.to_state.state }}, was {{ trigger.from_state.state }}'
     service: notify.ios_lars_se
 - id: lars_location
   alias: lars location change notify
   initial_state: true
   trigger:
   - entity_id: device_tracker.lars_se
-    event: enter
-    platform: zone
-    zone: zone.home
-  - entity_id: device_tracker.lars_se
-    event: leave
-    platform: zone
-    zone: zone.home
-  - entity_id: device_tracker.lars_se
-    event: enter
-    platform: zone
-    zone: zone.school
-  - entity_id: device_tracker.lars_se
-    event: leave
-    platform: zone
-    zone: zone.school
-  - entity_id: device_tracker.lars_se
-    event: enter
-    platform: zone
-    zone: zone.lake
-  - entity_id: device_tracker.lars_se
-    event: leave
-    platform: zone
-    zone: zone.lake
+    platform: state
   action:
-  - data:
-      message: Lars is {{ states('device_tracker.lars_se') }}
+  - data_template:
+      message: 'Lars is {{ trigger.to_state.state }}, was {{ trigger.from_state.state }}'
     service: notify.ios_lars_se
-- id: frontdoor_ding
+- id: frontdoor_ring
   alias: frontdoor ring
   initial_state: false
   trigger:
@@ -199,7 +155,7 @@
   action:
   - data:
       data:
-        attachmentnnodb-buffer-pool-sizeinnodb-buffer-pool-sizellll,nnodb-buffer-pool-size:
+        attachment:
           content-type: jpeg
         entity_id: camera.lacmain
         push:
@@ -225,25 +181,6 @@
           category: camera
       message: Motion detected in Laconia
     service: notify.ios_lars_se
-- id: doorbell
-  alias: school doorbell
-  trigger:
-  - platform: state
-    entity_id: binary_sensor.doorbell
-  action:
-    service: notify.ios_lars_se
-    data:
-      message: Somebody is at the school door
-      data:
-        attachment:
-          content-type: jpeg
-        push:
-          badge: 5
-          category: camera
-        action_data:
-          entity_id: binary_sensor.school_door
-          my_custom_data: 'on'
-        entity_id: camera.arlington
 - id: disable_camera
   alias: disable camera
   trigger:
@@ -455,6 +392,7 @@
     zone: zone.home
   condition: []
   action:
+  - delay: 0:01:30
   - data: {}
     service: python_script.welcome
 - id: '1516487261296'
@@ -724,7 +662,7 @@
       value: '{{ trigger.event.data.vehicle.battery_voltage }}'
     service: input_number.set_value
   - data_template:
-      message: 'status report for {{ trigger.event.data.vehicle }}'
+      message: status report for {{ trigger.event.data.vehicle }}
     service: system_log.write
 - id: '1544991801102'
   alias: ram_status
@@ -741,3 +679,74 @@
       entity_id: input_number.battery_ram
       value: '{{ trigger.event.data.vehicle.battery_voltage }}'
     service: input_number.set_value
+- id: '1546550202229'
+  alias: garage_lac_notify_on
+  trigger:
+  - entity_id: binary_sensor.garage_lac_door
+    platform: state
+    from: 'off'
+    to: 'on'
+    for:
+      seconds: 15
+  - entity_id: binary_sensor.garage_lac_door
+    platform: state
+    to: unavailable
+    for:
+      seconds: 15
+  condition: []
+  action:
+  - data_template:
+      message: '{{ trigger.entity_id }} is {{ trigger.to_state.state }}'
+    service: notify.ios_lars_se
+- id: '1546550202230'
+  alias: garage_lac_notify_off
+  trigger:
+  - entity_id: binary_sensor.garage_lac_door
+    platform: state
+    from: 'on'
+    to: 'off'
+  condition:
+  - condition: template
+    value_template: '{{ as_timestamp(now())-as_timestamp(states.input_boolean.garage_lac_open.last_changed)
+      > 15 }}'
+  action:
+  - data_template:
+      message: '{{ trigger.entity_id }} is {{ trigger.to_state.state }}'
+    service: notify.ios_lars_se
+- id: '1546622646469'
+  alias: garage_lac_on
+  trigger:
+  - entity_id: binary_sensor.garage_lac_door
+    from: 'off'
+    platform: state
+    to: 'on'
+  condition: []
+  action:
+  - data:
+      entity_id: input_boolean.garage_lac_open
+    service: input_boolean.turn_on
+- id: '1546622646479'
+  alias: garage_lac_off
+  trigger:
+  - entity_id: binary_sensor.garage_lac_door
+    from: 'on'
+    platform: state
+    to: 'off'
+    for:
+      seconds: 15
+  condition: []
+  action:
+  - data:
+      entity_id: input_boolean.garage_lac_open
+    service: input_boolean.turn_off
+- id: '1546730794007'
+  alias: weatherstation
+  trigger:
+  - entity_id: binary_sensor.weatherstation_updating
+    platform: state
+  condition: []
+  action:
+  - data_template:
+      message: '  now {{ trigger.to_state.state }}, was {{ trigger.from_state.state  }}'
+      title: Weatherstation
+    service: notify.ios_lars_se

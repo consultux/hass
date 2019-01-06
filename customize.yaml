@@ -1,11 +1,5 @@
 device_tracker.backup_iphone:
   hidden: true
-#zone.home:
-#  beacon:
-#    major: 10
-#    minor: 48
-#    uuid: FDA50693-A4E2-4FB1-AFCF-C6EB07647825
-#  track_ios: true
 device_tracker.1921681179:
   hidden: true
 device_tracker.1921681189:
@@ -39,3 +33,5 @@ binary_sensor.heat_all:
   order: 2
 weather.here:
   friendly_name: Arlington
+binary_sensor.garage_lac_door:
+  friendly_name: Garage Lake

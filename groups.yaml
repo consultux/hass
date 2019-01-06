@@ -8,7 +8,6 @@
     - group.lakehouse
     - proximity.home
     - proximity.lake
-    - weather.bedrooms
 
  family:
   name: Family
@@ -18,8 +17,7 @@
     - device_tracker.lars_se
     - device_tracker.danielas_iphone
     - device_tracker.lara_iphone
-    - sensor.coffee_today
-    - sensor.lake_house_eta
+#    - sensor.coffee_today
 
  arl:
   name: Arlington
@@ -27,9 +25,12 @@
     - binary_sensor.arl_away_mode
     - binary_sensor.heat_arl
     - binary_sensor.bedrooms_heat
-    - sensor.arl_temp
-    - sensor.arl_wind
-    - sensor.arl_winddir
+    - sensor.pws_alerts_3
+    - sensor.pws_temp_f_3
+    - sensor.pws_weather_3
+    - sensor.pws_wind_mph_3
+    - sensor.pws_wind_gust_mph_3
+    - sensor.pws_wind_dir_3
 
  lakehouse:
   name: Laconia
@@ -38,8 +39,10 @@
     - binary_sensor.heat_all
     - binary_sensor.furnace
     - alarm_control_panel.laconia
+    - binary_sensor.garage_lac_door
     - binary_sensor.laconia_fire
     - binary_sensor.too_cold
+    - binary_sensor.weatherstation_updating
     - sensor.windmeter
     - sensor.indoor
     - sensor.outdoor
@@ -50,7 +53,7 @@
     - sensor.pws_weather
     - sensor.pws_wind_mph
     - sensor.pws_wind_gust_mph
-    - sensor.pws_wind_degrees
+    - sensor.pws_wind_dir
     - sun.sun
 
  nest:
@@ -88,6 +91,39 @@
     - history_graph.office
     - history_graph.bedrooms
     - history_graph.playroom
+
+ weather:
+  name: Weather
+  view: yes
+  entities: 
+    - group.arl_weather
+    - group.lac_weather
+
+ arl_weather:
+  name: Arlington
+  entities:
+    - sensor.pws_alerts_3
+    - sensor.pws_weather_1d_3
+    - sensor.pws_weather_1n_3
+    - sensor.pws_weather_2d_3
+    - sensor.pws_weather_2n_3
+    - sensor.pws_weather_3d_3
+    - sensor.pws_weather_3n_3
+    - sensor.pws_weather_4d_3
+    - sensor.pws_weather_4n_3
+
+ lac_weather:
+  name: Laconia
+  entities:
+    - sensor.pws_alerts
+    - sensor.pws_weather_1d
+    - sensor.pws_weather_1n
+    - sensor.pws_weather_2d
+    - sensor.pws_weather_2n
+    - sensor.pws_weather_3d
+    - sensor.pws_weather_3n
+    - sensor.pws_weather_4d
+    - sensor.pws_weather_4n
 
  arl_burn:
   name: Heat Requested
@@ -181,6 +217,29 @@
     - group.all_scripts
     - group.all_automations
 
+ cars_view:
+  name: Cars
+  view: yes
+  entities:
+    - group.atlas
+    - group.ram
+
+ atlas:
+  name: VW Atlas
+  entities: 
+    - device_tracker.2018_volkswagen_atlas
+    - sensor.atlas_fuel
+    - binary_sensor.atlas_ignition
+    - sensor.atlas_battery
+
+ ram:
+  name: RAM 1500
+  entities:  
+    - device_tracker.2019_ram_1500
+    - sensor.ram_fuel
+    - binary_sensor.ram_ignition
+    - sensor.ram_battery
+
  lights:
   name: Lights
   view: yes
@@ -234,36 +293,3 @@
   entities:
     - device_tracker.lars_iphone_wifi
     - device_tracker.dani_iphone_wifi
-
- cars_view:
-  name: Cars
-  view: yes
-  entities:
-    - group.bmw
-    - group.atlas
-    - group.ram
-
- bmw:
-  name: BMW
-  entities:
-    - binary_sensor.228i_xdrive_lids
-    - binary_sensor.228i_xdrive_windows
-    - device_tracker.228i_xdrive
-    - sensor.228i_xdrive_remaining_range_total
-
- atlas:
-  name: VW Atlas
-  entities: 
-    - device_tracker.2018_volkswagen_atlas
-    - sensor.atlas_fuel
-    - binary_sensor.atlas_ignition
-    - sensor.atlas_battery
-
- ram:
-  name: RAM 1500
-  entities:  
-    - device_tracker.2019_ram_1500
-    - sensor.ram_fuel
-    - binary_sensor.ram_ignition
-    - sensor.ram_battery
-# new comment

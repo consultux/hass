@@ -4,7 +4,7 @@ homeassistant:
   latitude: !secret lat
   longitude: !secret lon
   # Impacts weather/sunrise data (altitude above sea level in meters)
-  elevation: 87
+  elevation: 163
   # metric for Metric, imperial for Imperial
   unit_system: imperial
   # Pick yours from here: http://en.wikipedia.org/wiki/List_of_tz_database_time_zones
@@ -202,13 +202,17 @@ binary_sensor:
 #  - platform: iss
 #    show_on_map: true
   - platform: mqtt
+    state_topic: "/esp/b4e62d094799/status"
+    name: "garage_lac_door"
+    friendly_name: "Garage Lake"
+    value_template: '{{ value_json.door }} '
+    payload_on: '1'
+    payload_off: '0'
+    device_class: garage_door
+    availability_topic: "/esp/b4e62d094799/available"
+  - platform: mqtt
     state_topic: "homeassist/furnace"
     name: "furnace"
-  - platform: mqtt
-    state_topic: "school/doorbell"
-    name: "doorbell"
-#  - platform: http
-#    name: school_door
   - platform: ring
   - platform: command_line
     name: "foscam2 motion"
@@ -256,6 +260,11 @@ binary_sensor:
     scan_interval: 5
   - platform: template
     sensors:
+      weatherstation_updating:
+        # problem class, so reverse logic. true if there is a problem
+        value_template: "{{ as_timestamp(now())-as_timestamp(states.sensor.pws_observation_time.last_changed) > 900 }}"
+        device_class: problem
+        friendly_name: Weatherstation
       arl_away_mode:
         #device_class: presence
         value_template: "{{ is_state_attr('climate.here', 'away_mode', 'on') }}"
@@ -315,14 +324,14 @@ binary_sensor:
              and is_state('binary_sensor.office_online', 'off')
              and is_state('binary_sensor.playroom_online', 'off') }}
       heat_arl:
-        friendly_name: Heat Requested
+        friendly_name: Heat Requested A1
         device_class: heat
         value_template: >-
           {{ is_state_attr('climate.here', 'operation', 'heat')
              or is_state_attr('climate.office', 'operation', 'heat')
              or is_state_attr('climate.playroom', 'operation', 'heat') }}
       heat_all:
-        friendly_name: Heat Requested
+        friendly_name: Heat Requested L
         device_class: heat
         entity_id:
           - sensor.sun_room_thermostat_hvac_state
@@ -427,7 +436,6 @@ switch:
         command_state: '/usr/local/bin/foscamcontrol 192.168.10.64 detect'
         value_template: '{{ value != "0" }}'
 
-# Weather prediction
 sensor:
   - platform: ring
   - platform: wunderground
@@ -443,6 +451,37 @@ sensor:
       - feelslike_f
       - precip_today_in
       - weather
+      - observation_time
+      - weather_1d
+      - weather_1n
+      - weather_2d
+      - weather_2n
+      - weather_3d
+      - weather_3n
+      - weather_4d
+      - weather_4n
+  - platform: wunderground
+    api_key: !secret wunderground
+    pws_id: !secret pws2_id
+    monitored_conditions:
+      - alerts
+      - temp_f
+      - wind_mph
+      - wind_gust_mph
+      - wind_dir
+      - wind_degrees
+      - feelslike_f
+      - precip_today_in
+      - weather
+      - observation_time
+      - weather_1d
+      - weather_1n
+      - weather_2d
+      - weather_2n
+      - weather_3d
+      - weather_3n
+      - weather_4d
+      - weather_4n
   - platform: arlo
   - platform: history_stats
     name: Arlington2 today hr
@@ -543,14 +582,14 @@ sensor:
     end: '{{ now() }}'
   - platform: history_stats
     name: Arl1 outages today
-    entity_id: binary_sensor.outages_arl1
+    entity_id: binary_sensor.outage_arl1
     state: 'on'
     type: count
     start: '{{ now().replace(hour=0).replace(minute=0).replace(second=0) }}'
     end: '{{ now() }}'
   - platform: history_stats
     name: Arl1 outages yesterday 
-    entity_id: binary_sensor.outages_arl1
+    entity_id: binary_sensor.outage_arl1
     state: 'on'
     type: count
     end: '{{ now().replace(hour=0).replace(minute=0).replace(second=0) }}'
@@ -638,6 +677,25 @@ sensor:
 #    END FIXME
     
   - platform: mqtt
+    state_topic: "/esp/b4e62d094799/status"
+    name: garage_lac
+    value_template: ' {{ value_json.door}} '
+  - platform: mqtt
+    state_topic: "/esp/b4e62d094799/status"
+    name: garage_lac_temp
+    value_template: ' {{ value_json.temp}} '
+    availability_topic: "/esp/b4e62d094799/available"
+  - platform: mqtt
+    state_topic: "/esp/b4e62d094799/status"
+    name: garage_lac_problems
+    value_template: ' {{ value_json.problems}} '
+    availability_topic: "/esp/b4e62d094799/available"
+  - platform: mqtt
+    state_topic: "/esp/b4e62d094799/status"
+    name: garage_lac_status
+    value_template: ' {{ value_json.status}} '
+    availability_topic: "/esp/b4e62d094799/available"
+  - platform: mqtt
     state_topic: "weatherstation/live"
     name: windmeter
     value_template: ' {{ value_json.Outdoor1ID }} '
@@ -651,6 +709,11 @@ sensor:
     name: outdoor
     value_template: ' {{ value_json.outTemp }} '
     unit_of_measurement: "°F"
+  - platform: mqtt
+    state_topic: "weatherstation/live"
+    name: rain_today
+    value_template: ' {{ value_json.rainofdaily }} '
+    unit_of_measurement: "in"
   - platform: template
     sensors:
       ram_battery:
@@ -794,7 +857,7 @@ zone:
   - name: Home
     latitude: !secret home_lat
     longitude: !secret home_lon
-    radius: 100
+    radius: 300
     icon: mdi:home
 #    passive: true
   - name: School
@@ -818,10 +881,6 @@ input_number:
     min: 0
     max: 20
 input_boolean:
-  door_open:
-    name: Door Open
-    initial: off
-    icon: mdi:door
   arl_home:
     name: Arlington Home
     initial: off
@@ -834,6 +893,9 @@ input_boolean:
     initial: off
   ram_ignition:
     name: RAM running
+    initial: off
+  garage_lac_open:
+    name: GarageL Flapping 
     initial: off
 
 #device_tracker:
@@ -874,24 +936,25 @@ proximity:
       - device_tracker.lars_se
       - device_tracker.danielas_iphone
     tolerance: 50
+
 owntracks:
-  max_gps_accuracy: 2000
-  waypoints: true
+  max_gps_accuracy: 1200
+  waypoints: false
   mqtt_topic: "owntracks/#"
-  events_only: true
-  waypoint_whitelist:
-    - lars
+#  events_only: true
+#  waypoint_whitelist:
+#    - lars
 #    - ram
-  region_mapping:
-    'lars se - -home:FDA50693-A4E2-4FB1-AFCF-C6EB07647825': home
-    'home:FDA50693-A4E2-4FB1-AFCF-C6EB07647825': home
+#  region_mapping:
+#    'lars se - -home:FDA50693-A4E2-4FB1-AFCF-C6EB07647825': home
+#    'home:FDA50693-A4E2-4FB1-AFCF-C6EB07647825': home
 #    office: work
 
-bmw_connected_drive:
-  name:
-    username: !secret bmw_user
-    password: !secret bmw_password
-    region: north_america
+#bmw_connected_drive:
+#  name:
+#    username: !secret bmw_user
+#    password: !secret bmw_password
+#    region: north_america
 
 
 python_script:
