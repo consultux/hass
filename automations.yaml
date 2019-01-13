@@ -14,9 +14,13 @@
   trigger:
   - entity_id: device_tracker.danielas_iphone
     platform: state
+  condition:
+  - condition: template
+    value_template: '{{ trigger.to_state.state != trigger.from_state.state }}'
   action:
   - data_template:
-      message: 'Daniela is {{ trigger.to_state.state }}, was {{ trigger.from_state.state }}'
+      message: Daniela is {{ trigger.to_state.state }}, was {{ trigger.from_state.state
+        }}
     service: notify.ios_lars_se
 - id: lars_location
   alias: lars location change notify
@@ -24,9 +28,13 @@
   trigger:
   - entity_id: device_tracker.lars_se
     platform: state
+  condition:
+  - condition: template
+    value_template: '{{ trigger.to_state.state != trigger.from_state.state }}'
   action:
   - data_template:
-      message: 'Lars is {{ trigger.to_state.state }}, was {{ trigger.from_state.state }}'
+      message: Lars is {{ trigger.to_state.state }}, was {{ trigger.from_state.state
+        }}
     service: notify.ios_lars_se
 - id: frontdoor_ring
   alias: frontdoor ring
@@ -418,7 +426,7 @@
 - id: '1516577077457'
   alias: HeatSunroom
   trigger:
-  - below: '57'
+  - below: '60'
     entity_id: sensor.sun_room_thermostat_temperature
     platform: numeric_state
   condition: []
@@ -429,7 +437,7 @@
 - id: noheatsunroom
   alias: NoHeatSunroom
   trigger:
-  - above: '56'
+  - above: '59'
     entity_id: sensor.sun_room_thermostat_temperature
     platform: numeric_state
   condition: []
@@ -687,12 +695,18 @@
     from: 'off'
     to: 'on'
     for:
-      seconds: 15
+      seconds: 6
   - entity_id: binary_sensor.garage_lac_door
     platform: state
     to: unavailable
     for:
-      seconds: 15
+      seconds: 180
+  - entity_id: binary_sensor.garage_lac_door
+    platform: state
+    from: unavailable
+    to: 'off'
+    for:
+      seconds: 6
   condition: []
   action:
   - data_template:
@@ -708,7 +722,7 @@
   condition:
   - condition: template
     value_template: '{{ as_timestamp(now())-as_timestamp(states.input_boolean.garage_lac_open.last_changed)
-      > 15 }}'
+      > 6 }}'
   action:
   - data_template:
       message: '{{ trigger.entity_id }} is {{ trigger.to_state.state }}'
@@ -750,3 +764,43 @@
       message: '  now {{ trigger.to_state.state }}, was {{ trigger.from_state.state  }}'
       title: Weatherstation
     service: notify.ios_lars_se
+- id: '1547315267738'
+  alias: auto-update-garager
+  trigger:
+  - payload: online
+    platform: mqtt
+    topic: /esp/b4e62d094799/available
+  condition: []
+  action:
+  - data:
+      payload: update
+      topic: /esp/b4e62d094799/command
+    service: mqtt.publish
+- id: '1547337413069'
+  alias: furnace_led_on
+  trigger:
+  - entity_id: binary_sensor.furnace
+    from: 'off'
+    platform: state
+    to: 'on'
+  condition:
+  - condition: state
+    entity_id: binary_sensor.office_occupancy
+    state: 'on'
+  action:
+  - data:
+      color_name: red
+      entity_id: light.cave_b2
+    service: light.turn_on
+- id: '1547337585668'
+  alias: furnace_led_off
+  trigger:
+  - entity_id: binary_sensor.furnace
+    from: 'on'
+    platform: state
+    to: 'off'
+  condition: []
+  action:
+  - data:
+      entity_id: light.cave_b2
+    service: light.turn_off
