@@ -74,7 +74,7 @@ discovery:
 
 recorder:
   db_url: !secret db_url
-  purge_keep_days: 10
+  purge_keep_days: 2
   exclude:
     entities:
       - sun.sun
@@ -88,6 +88,17 @@ prometheus:
     entities:
       - sun.sun
       - binary_sensor.iss
+      - climate.here
+      - climate.office
+      - climate.bedrooms
+      - climate.playroom
+      - sensor.ring_driveway_last_activity
+      - sensor.ring_driveway_last_motion
+      - sensor.danielas_iphone_battery_state
+      - sensor.ring_driveway_wifi_signal_category
+      - sensor.larss_8_battery_state_2
+    domains: 
+      - light
 
 hue:
   bridges:
@@ -146,12 +157,12 @@ camera:
     password: !secret foscam_password
     name: Bed 
 
-  - platform: foscam
-    ip: 192.168.1.66
-    port: 80
-    username: !secret foscam_user
-    password: !secret foscam_password
-    name: Lake
+#  - platform: foscam
+#    ip: 192.168.1.66
+#    port: 80
+#    username: !secret foscam_user
+#    password: !secret foscam_password
+#    name: Lake
 
 
   - platform: arlo
@@ -171,7 +182,18 @@ alarm_control_panel:
 
 sonos:
   media_player: 
-    hosts: 192.168.10.20,192.168.10.21,192.168.10.22,192.168.10.23
+    hosts: 
+      - 192.168.10.20
+      - 192.168.10.21
+      - 192.168.10.22
+      - 192.168.10.23
+      - 192.168.10.24
+      - 192.168.1.20
+      - 192.168.1.21
+      - 192.168.1.198
+
+roku:
+  - host: 192.168.1.170
 
 # Enables a map showing the location of tracked devices
 map:
@@ -183,6 +205,24 @@ mqtt:
   broker: "192.168.1.85"
 
 binary_sensor:
+  - platform: trend
+    sensors: 
+      here_heating:
+        entity_id: climate.here
+        attribute: current_temperature
+        min_gradient: 0.00001
+      office_heating:
+        entity_id: climate.office
+        attribute: current_temperature
+        min_gradient: 0.00001
+      playroom_heating:
+        entity_id: climate.playroom
+        attribute: current_temperature
+        min_gradient: 0.00001
+      bedrooms_heating:
+        entity_id: climate.bedrooms
+        attribute: current_temperature
+        min_gradient: 0.00001
   - platform: ping
     host: 192.168.1.40
     name: here_online
@@ -202,9 +242,14 @@ binary_sensor:
 #  - platform: iss
 #    show_on_map: true
   - platform: mqtt
+    state_topic: "weatherstation/live"
+    name: windmeter
+    value_template: " {{ not is_state('value_json.Outdoor1ID', '0x76') }} "
+    device_class: problem
+  - platform: mqtt
     state_topic: "/esp/b4e62d094799/status"
-    name: "garage_lac_door"
-    friendly_name: "Garage Lake"
+    name: "garage_lac"
+    json_attributes_topic: /esp/b4e62d094799/status
     value_template: '{{ value_json.door }} '
     payload_on: '1'
     payload_off: '0'
@@ -217,6 +262,17 @@ binary_sensor:
   - platform: command_line
     name: "foscam2 motion"
     command: '/usr/local/bin/foscamcontrol 192.168.1.62 state'
+    value_template: >-
+      {%- if value == "2" -%}
+        ON
+      {%- else -%}
+        OFF
+      {%- endif -%}
+    device_class: motion
+    scan_interval: 5
+  - platform: command_line
+    name: "foscam4 motion"
+    command: '/usr/local/bin/foscamcontrol 192.168.10.64 state'
     value_template: >-
       {%- if value == "2" -%}
         ON
@@ -247,68 +303,98 @@ binary_sensor:
       {%- endif -%}
     device_class: motion
     scan_interval: 5
-  - platform: command_line
-    name: "foscam6 motion"
-    command: '/usr/local/bin/foscamcontrol 192.168.1.66 state'
-    value_template: >-
-      {%- if value == "2" -%}
-        ON
-      {%- else -%}
-        OFF
-      {%- endif -%}
-    device_class: motion
-    scan_interval: 5
+#  - platform: command_line
+#    name: "foscam6 motion"
+#    command: '/usr/local/bin/foscamcontrol 192.168.1.66 state'
+#    value_template: >-
+#      {%- if value == "2" -%}
+#        ON
+#      {%- else -%}
+#        OFF
+#      {%- endif -%}
+#    device_class: motion
+#    scan_interval: 5
   - platform: template
     sensors:
-      weatherstation_updating:
+      weatherstation_sending:
         # problem class, so reverse logic. true if there is a problem
 #        value_template: "{{ as_timestamp(now())-as_timestamp(states.sensor.pws_observation_time.last_changed) > 900 }}"
-        value_template: '{{ as_timestamp(now())-as_timestamp(strptime(states.sensor.pws_observation_time.state~" "~(now().year),"Last Updated on %B %d, %I:%M %p %Z %Y")) > states.input_number.weatherstation_treshold.state | float }}'
+#        value_template: '{{ as_timestamp(now())-as_timestamp(strptime(states.sensor.pws_observation_time.state~" "~(now().year),"Last Updated on %B %d, %I:%M %p %Z %Y")) > states.input_number.weatherstation_treshold.state | float }}'
+        value_template: "{{ (as_timestamp(now())-as_timestamp(states.sensor.outdoor.last_changed)) > (states.input_number.weatherstation_treshold.state | float) }}"
+        device_class: problem
+        friendly_name: Weatherstation sending
+        entity_id: 
+          - sensor.outdoor
+          - sensor.time
+      weatherstation_updating:
+        value_template: '{{ (as_timestamp(now())-as_timestamp(strptime(states.sensor.indoor.attributes.CurrTime, "%H:%M %m/%d/%Y"))) > (states.input_number.weatherstation_treshold.state | float) }}'
+#        value_template: '{{ as_timestamp(now())-as_timestamp(strptime("9:35 9/23/2019", "%H:%M %m/%d/%Y")) > (states.input_number.weatherstation_treshold.state | float) }}'
+        device_class: problem
+        friendly_name: Weatherstation updating
+        entity_id: 
+          - sensor.outdoor
+          - sensor.time
+      weatherstation:
         device_class: problem
         friendly_name: Weatherstation
+        value_template: >-
+          {{ is_state('binary_sensor.weatherstation_sending', 'on')
+             or is_state('binary_sensor.weatherstation_updating', 'on') }} 
+      indoor_battery:
+        device_class: problem
+        value_template: "{{ not is_state_attr('sensor.indoor', 'inBattSta', 'Normal') }}"
+        friendly_name: Indoor Battery
+      weatherstation_battery:
+        device_class: problem
+        value_template: "{{ not is_state_attr('sensor.indoor', 'outBattSta1', 'Normal') }}"
+        friendly_name: Weatherstation Battery
+      outdoor_battery:
+        device_class: problem
+        value_template: "{{ not is_state_attr('sensor.indoor', 'outBattSta2', 'Normal') }}"
+        friendly_name: Outdoor Battery
       arl_away_mode:
         #device_class: presence
-        value_template: "{{ is_state_attr('climate.here', 'away_mode', 'on') }}"
+        value_template: "{{ is_state_attr('climate.here', 'preset_mode', 'Away') }}"
         friendly_name: Away Mode
       sun_room_heat:
         device_class: heat
-        value_template: "{{ is_state('sensor.sun_room_thermostat_hvac_state', 'heating') }}"
+        value_template: "{{ is_state('sensor.sun_room_thermostat_hvac_state', 'heat') }}"
         friendly_name: Sunroom
       dining_room_heat:
         device_class: heat
-        value_template: "{{ is_state('sensor.dining_room_thermostat_hvac_state', 'heating') }}"
+        value_template: "{{ is_state('sensor.dining_room_thermostat_hvac_state', 'heat') }}"
         friendly_name: Diningroom
       living_room_heat:
         device_class: heat
-        value_template: "{{ is_state('sensor.living_room_thermostat_hvac_state', 'heating') }}"
+        value_template: "{{ is_state('sensor.living_room_thermostat_hvac_state', 'heat') }}"
         friendly_name: Livingroom
       family_room_heat:
         device_class: heat
-        value_template: "{{ is_state('sensor.family_room_thermostat_hvac_state', 'heating') }}"
+        value_template: "{{ is_state('sensor.family_room_thermostat_hvac_state', 'heat') }}"
         friendly_name: Familyroom
       upstairs_heat:
         device_class: heat
-        value_template: "{{ is_state('sensor.upstairs_thermostat_hvac_state', 'heating') }}"
+        value_template: "{{ is_state('sensor.upstairs_thermostat_hvac_state', 'heat') }}"
         friendly_name: Upstairs
       master_bath_heat:
         device_class: heat
-        value_template: "{{ is_state('sensor.master_bath_thermostat_hvac_state', 'heating') }}"
+        value_template: "{{ is_state('sensor.master_bath_thermostat_hvac_state', 'heat') }}"
         friendly_name: Masterbath
       playroom_heat:
         device_class: heat
-        value_template: "{{ is_state_attr('climate.playroom', 'operation', 'heat') }}"
+        value_template: "{{ is_state_attr('climate.playroom', 'hvac_action', 'heating') }}"
         friendly_name: Playroom
       here_heat:
         device_class: heat
-        value_template: "{{ is_state_attr('climate.here', 'operation', 'heat') }}"
+        value_template: "{{ is_state_attr('climate.here', 'hvac_action', 'heating') }}"
         friendly_name: Here
       office_heat:
         device_class: heat
-        value_template: "{{ is_state_attr('climate.office', 'operation', 'heat') }}"
+        value_template: "{{ is_state_attr('climate.office', 'hvac_action', 'heating') }}"
         friendly_name: Office
       bedrooms_heat:
         device_class: heat
-        value_template: "{{ is_state_attr('climate.bedrooms', 'operation', 'heat') }}"
+        value_template: "{{ is_state_attr('climate.bedrooms', 'hvac_action', 'heating') }}"
         friendly_name: Bedrooms
       atlas_ignition:
         friendly_name: Atlas Ignition
@@ -328,9 +414,9 @@ binary_sensor:
         friendly_name: Heat Requested A1
         device_class: heat
         value_template: >-
-          {{ is_state_attr('climate.here', 'operation', 'heat')
-             or is_state_attr('climate.office', 'operation', 'heat')
-             or is_state_attr('climate.playroom', 'operation', 'heat') }}
+          {{ is_state_attr('climate.here', 'hvac_action', 'heating')
+             or is_state_attr('climate.office', 'hvac_action', 'heating')
+             or is_state_attr('climate.playroom', 'hvac_action', 'heating') }}
       heat_all:
         friendly_name: Heat Requested
         device_class: heat
@@ -342,46 +428,35 @@ binary_sensor:
           - sensor.upstairs_thermostat_hvac_state
           - sensor.master_bath_thermostat_hvac_state
         value_template: >-
-          {{ is_state('sensor.master_bath_thermostat_hvac_state', 'heating')
-             or is_state('sensor.sun_room_thermostat_hvac_state', 'heating')
-             or is_state('sensor.dining_room_thermostat_hvac_state', 'heating')
-             or is_state('sensor.living_room_thermostat_hvac_state', 'heating')
-             or is_state('sensor.family_room_thermostat_hvac_state', 'heating')
-             or is_state('sensor.upstairs_thermostat_hvac_state', 'heating') }}
+          {{ is_state('sensor.master_bath_thermostat_hvac_state', 'heat')
+             or is_state('sensor.sun_room_thermostat_hvac_state', 'heat')
+             or is_state('sensor.dining_room_thermostat_hvac_state', 'heat')
+             or is_state('sensor.living_room_thermostat_hvac_state', 'heat')
+             or is_state('sensor.family_room_thermostat_hvac_state', 'heat')
+             or is_state('sensor.upstairs_thermostat_hvac_state', 'heat') }}
       too_cold:
         friendly_name: Too Cold
         device_class: cold
-        entity_id:
-          - sensor.sun_room_thermostat_temperature
-          - sensor.dining_room_thermostat_temperature
-          - sensor.living_room_thermostat_temperature
-          - sensor.family_room_thermostat_temperature
-          - sensor.upstairs_thermostat_temperature
-          - sensor.master_bath_thermostat_temperature
         value_template: >-
-          {{ states('sensor.master_bath_thermostat_temperature')|float < 55 
-             or states('sensor.sun_room_thermostat_temperature')|float < 55
-             or states('sensor.dining_room_thermostat_temperature')|float < 55
-             or states('sensor.living_room_thermostat_temperature')|float < 55
-             or states('sensor.family_room_thermostat_temperature')|float < 55
-             or states('sensor.upstairs_thermostat_temperature')|float < 55 }}
+          {{ states('sensor.master_bath_thermostat_temperature')|float < (states.input_number.toocold_treshold.state | float) 
+             or states('sensor.sun_room_thermostat_temperature')|float < (states.input_number.toocold_treshold.state | float) 
+             or states('sensor.dining_room_thermostat_temperature')|float < (states.input_number.toocold_treshold.state | float) 
+             or states('sensor.living_room_thermostat_temperature')|float < (states.input_number.toocold_treshold.state | float) 
+             or states('sensor.family_room_thermostat_temperature')|float < (states.input_number.toocold_treshold.state | float) 
+             or states('sensor.upstairs_thermostat_temperature')|float <  (states.input_number.toocold_treshold.state | float) }}
       somebody_home: 
         friendly_name: Somebody Home
         device_class: presence
-        entity_id:
-          - device_tracker.lars_se
-          - device_tracker.danielas_iphone
         value_template: >-
           {{ is_state('device_tracker.lars_se', 'home')
-             or is_state('device_tracker.danielas_iphone', 'home') }} 
+             or is_state('device_tracker.danielas_iphone', 'home')  
+             or (is_state('device_tracker.lara_iphone', 'home') and is_state('input_boolean.lara_babysitting', 'on')) }}
       somebody_lake: 
         friendly_name: Somebody Lake
         device_class: presence
-        entity_id:
-          - device_tracker.lars_se
-          - device_tracker.danielas_iphone
         value_template: >-
           {{ is_state('device_tracker.lars_se', 'Lake')
+             or is_state('device_tracker.lara_iphone', 'Lake')  
              or is_state('device_tracker.danielas_iphone', 'Lake') }} 
       coffee_arlington: 
         friendly_name: Coffee Counter
@@ -401,13 +476,20 @@ binary_sensor:
              or is_state('sensor.upstairs_nest_protect_co_status') 
              or is_state('sensor.upstairs_nest_protect_smoke_status') }}
     
+tplink:
+   discovery: false
+   dimmer:
+     - host: 192.168.10.18
+     - host: 192.168.1.18
+   switch:
+     - host: 192.168.10.17
+     - host: 192.168.10.19
+     - host: 192.168.1.19
+     - host: 192.168.1.17
+     - host: 192.168.1.15
+     - host: 192.168.1.14
+
 switch:
-  - platform: tplink
-    host: 192.168.10.19
-    name: meter1
-  - platform: tplink
-    host: 192.168.1.19
-    name: meter2
   - platform: command_line
     switches:
       foscam2_motiondetect:
@@ -425,11 +507,11 @@ switch:
         command_off: '/usr/local/bin/foscamcontrol1 192.168.1.65 off'
         command_state: '/usr/local/bin/foscamcontrol1 192.168.1.65 detect'
         value_template: '{{ value != "0" }}'
-      foscam6_motiondetect:
-        command_on: '/usr/local/bin/foscamcontrol1 192.168.1.66 on'
-        command_off: '/usr/local/bin/foscamcontrol1 192.168.1.66 off'
-        command_state: '/usr/local/bin/foscamcontrol1 192.168.1.66 detect'
-        value_template: '{{ value != "0" }}'
+#      foscam6_motiondetect:
+#        command_on: '/usr/local/bin/foscamcontrol1 192.168.1.66 on'
+#        command_off: '/usr/local/bin/foscamcontrol1 192.168.1.66 off'
+#        command_state: '/usr/local/bin/foscamcontrol1 192.168.1.66 detect'
+#        value_template: '{{ value != "0" }}'
       foscam4_motiondetect:
         command_on: '/usr/local/bin/foscamcontrol 192.168.10.64 on'
         command_off: '/usr/local/bin/foscamcontrol 192.168.10.64 off'
@@ -438,50 +520,50 @@ switch:
 
 sensor:
   - platform: ring
-  - platform: wunderground
-    api_key: !secret wunderground
-    pws_id: !secret pws_id
-    monitored_conditions:
-      - alerts
-      - temp_f
-      - wind_mph
-      - wind_gust_mph
-      - wind_dir
-      - wind_degrees
-      - feelslike_f
-      - precip_today_in
-      - weather
-      - observation_time
-      - weather_1d
-      - weather_1n
-      - weather_2d
-      - weather_2n
-      - weather_3d
-      - weather_3n
-      - weather_4d
-      - weather_4n
-  - platform: wunderground
-    api_key: !secret wunderground
-    pws_id: !secret pws2_id
-    monitored_conditions:
-      - alerts
-      - temp_f
-      - wind_mph
-      - wind_gust_mph
-      - wind_dir
-      - wind_degrees
-      - feelslike_f
-      - precip_today_in
-      - weather
-      - observation_time
-      - weather_1d
-      - weather_1n
-      - weather_2d
-      - weather_2n
-      - weather_3d
-      - weather_3n
-      - weather_4d
-      - weather_4n
+#  - platform: wunderground
+#    api_key: !secret wunderground
+#    pws_id: !secret pws_id
+#    monitored_conditions:
+#      - alerts
+#      - temp_f
+#      - wind_mph
+#      - wind_gust_mph
+#      - wind_dir
+#      - wind_degrees
+#      - feelslike_f
+#      - precip_today_in
+#      - weather
+#      - observation_time
+#      - weather_1d
+#      - weather_1n
+#      - weather_2d
+#      - weather_2n
+#      - weather_3d
+#      - weather_3n
+#      - weather_4d
+#      - weather_4n
+#  - platform: wunderground
+#    api_key: !secret wunderground
+#    pws_id: !secret pws2_id
+#    monitored_conditions:
+#      - alerts
+#      - temp_f
+#      - wind_mph
+#      - wind_gust_mph
+#      - wind_dir
+#      - wind_degrees
+#      - feelslike_f
+#      - precip_today_in
+#      - weather
+#      - observation_time
+#      - weather_1d
+#      - weather_1n
+#      - weather_2d
+#      - weather_2n
+#      - weather_3d
+#      - weather_3n
+#      - weather_4d
+#      - weather_4n
   - platform: arlo
   - platform: history_stats
     name: Arlington2 today hr
@@ -664,46 +746,24 @@ sensor:
 #    attribute: value
 
 #    FIXME: re-activate water sensor in spring
-#  - platform: mqtt
-#    state_topic: "/huzzah2/status"
-#    name: watersensor
-#    value_template: ' {{ value_json.battery | float }} '
-#    unit_of_measurement: "mV"
-#  - platform: mqtt
-#    state_topic: "/huzzah2/status"
-#    name: water
-#    unit_of_measurement: "°C"
-#    value_template: ' {{ value_json.wtemp }} '
+  - platform: mqtt
+    state_topic: "/huzzah2/status"
+    name: watersensor
+    value_template: ' {{ value_json.battery | float }} '
+    unit_of_measurement: "mV"
+  - platform: mqtt
+    state_topic: "/huzzah2/status"
+    name: water
+    unit_of_measurement: "°C"
+    value_template: ' {{ value_json.wtemp }} '
 #    END FIXME
     
-  - platform: mqtt
-    state_topic: "/esp/b4e62d094799/status"
-    name: garage_lac
-    value_template: ' {{ value_json.door}} '
-  - platform: mqtt
-    state_topic: "/esp/b4e62d094799/status"
-    name: garage_lac_temp
-    value_template: ' {{ value_json.temp}} '
-    availability_topic: "/esp/b4e62d094799/available"
-  - platform: mqtt
-    state_topic: "/esp/b4e62d094799/status"
-    name: garage_lac_problems
-    value_template: ' {{ value_json.problems}} '
-    availability_topic: "/esp/b4e62d094799/available"
-  - platform: mqtt
-    state_topic: "/esp/b4e62d094799/status"
-    name: garage_lac_status
-    value_template: ' {{ value_json.status}} '
-    availability_topic: "/esp/b4e62d094799/available"
-  - platform: mqtt
-    state_topic: "weatherstation/live"
-    name: windmeter
-    value_template: ' {{ value_json.Outdoor1ID }} '
   - platform: mqtt
     state_topic: "weatherstation/live"
     name: indoor
     value_template: ' {{ value_json.inTemp }} '
     unit_of_measurement: "°F"
+    json_attributes_topic: "weatherstation/live"
   - platform: mqtt
     state_topic: "weatherstation/live"
     name: outdoor
@@ -711,9 +771,29 @@ sensor:
     unit_of_measurement: "°F"
   - platform: mqtt
     state_topic: "weatherstation/live"
+    name: rain_hourly
+    value_template: ' {{ value_json.rainofhourly}} '
+    unit_of_measurement: "in"
+  - platform: mqtt
+    state_topic: "weatherstation/live"
     name: rain_today
     value_template: ' {{ value_json.rainofdaily }} '
     unit_of_measurement: "in"
+  - platform: mqtt
+    state_topic: "weatherstation/live"
+    name: wind
+    value_template: ' {{ value_json.avgwind }} '
+    unit_of_measurement: "mph"
+  - platform: mqtt
+    state_topic: "weatherstation/live"
+    name: wind_gust
+    value_template: ' {{ value_json.gustspeed }} '
+    unit_of_measurement: "mph"
+  - platform: mqtt
+    state_topic: "weatherstation/live"
+    name: wind_dir
+    value_template: ' {{ value_json.windir }} '
+    unit_of_measurement: "°"
   - platform: template
     sensors:
       ram_battery:
@@ -756,6 +836,10 @@ sensor:
         entity_id: switch.meter2
         unit_of_measurement: W
         value_template: ' {{ states.switch.meter2.attributes.current_power_w | float }}'
+      garage_lac_temp:
+        value_template: "{{ states.binary_sensor.garage_lac.attributes.temp | float }}"
+        friendly_name: garage
+        unit_of_measurement: "°C"
 
 nest:
   client_id: !secret nest_id
@@ -767,7 +851,8 @@ nest:
 
 # Text to speech
 tts:
-  - platform: google
+  - platform: google_translate
+    service_name: google_say
 
 history_graph:
   heat_here:
@@ -833,14 +918,15 @@ history_graph:
   ecobee_status:
     name: Ecobee Status
     entities:
+     - binary_sensor.heat_arl
      - binary_sensor.here_heat
      - binary_sensor.office_heat
      - binary_sensor.bedrooms_heat
      - binary_sensor.playroom_heat
-     - binary_sensor.here_online
-     - binary_sensor.office_online
-     - binary_sensor.bedrooms_online
-     - binary_sensor.playroom_online
+     - binary_sensor.here_heating
+     - binary_sensor.office_heating
+     - binary_sensor.bedrooms_heating
+     - binary_sensor.playroom_heating
     hours_to_show: 24
 
 
@@ -880,12 +966,21 @@ input_number:
     initial: 0
     min: 0
     max: 20
+  toocold_treshold:
+    name: TooCold Treshold
+    initial: 55
+    min: 40
+    max: 62
   weatherstation_treshold:
     name: Weatherstation Age
     initial: 3600
     min: 0
     max: 86400
 input_boolean:
+  lara_babysitting:
+    name: Lara Babysitting
+    initial: off
+    icon: mdi:home
   arl_home:
     name: Arlington Home
     initial: off
@@ -925,9 +1020,46 @@ device_tracker:
 #    consider_home: 600
 #    track_new_devices: false
 
+alert:
+  weatherstation:
+    name: Alert weatherstation not working!
+    done_message: Alert resolved weatherstation ok
+    entity_id: binary_sensor.weatherstation
+    state: 'on'
+    repeat: 
+      - 30
+      - 120
+      - 120
+      - 240
+    can_acknowledge: true
+    skip_first: false
+    notifiers:
+      - ios_danielas_iphone
+      - ios_lars_se
+  garage_door:
+    name: Alert garage is still open!
+    done_message: Alert resolved garage is closed
+    entity_id: binary_sensor.garage_lac
+    state: 'on'
+    repeat: 
+      - 30
+      - 120
+      - 120
+      - 240
+    can_acknowledge: true
+    skip_first: true
+    notifiers:
+      - ios_danielas_iphone
+      - ios_lars_se
+
 notify:
   - name: ecobee
     platform: ecobee
+  - name: phones
+    platform: group
+    services:
+      - service: ios_lars_se
+      - service: ios_danielas_iphone
 
 proximity:
   home:
@@ -960,9 +1092,26 @@ owntracks:
 #    username: !secret bmw_user
 #    password: !secret bmw_password
 #    region: north_america
+upnp:
+  sensors: true
+  local_ip: 192.168.1.85
 
+tuya:
+  username: !secret tuya_user
+  password: !secret tuya_password
+  country_code: 1
+
+somfy:
+  client_id: !secret somfy_id
+  client_secret: !secret somfy_secret
+
+somfy_mylink:
+  host: 192.168.1.14
+  system_id: mylink
 
 python_script:
+
+system_health:
 
 group: !include groups.yaml
 automation: !include automations.yaml

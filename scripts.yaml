@@ -27,7 +27,7 @@ bedtime:
       entity_id: group.all_lights
     service: light.turn_off
   - data:
-      entity_id: switch.meter1
+      entity_id: switch.kalter_keller,switch.lake_front,switch.lake_backyard_floodlight, switch.meter1, switch.meter2
     service: switch.turn_off
   - data:
       entity_id: group.sonos
@@ -48,8 +48,14 @@ arm_lake:
       entity_id: group.lights_rooms_laconia
     service: light.turn_off
   - data:
+      entity_id: switch.lake_backyard_floodlight
+    service: switch.turn_off
+  - data:
+      entity_id: switch.lake_front
+    service: switch.turn_off
+  - data:
       message: Lake armed!
-    service: notify.ios_lars_se
+    service: notify.phones
 disarm_lake:
   alias: DisarmLake
   sequence:
@@ -64,7 +70,7 @@ disarm_lake:
     service: switch.turn_off
   - data:
       message: Lake disarmed
-    service: notify.ios_lars_se
+    service: notify.phones
 come_home:
   alias: ComeHome
   sequence:
@@ -74,6 +80,14 @@ come_home:
   - data:
       entity_id: switch.foscam4_motiondetect
     service: switch.turn_off
+  - data:
+      resume_all: true
+      entity_id: 
+        - climate.bedrooms
+        - climate.here
+        - climate.playroom
+        - climate.office
+    service: climate.ecobee_resume_program
   - condition: state
     entity_id: sun.sun
     state: below_horizon
@@ -81,16 +95,30 @@ come_home:
       entity_id: light.kuche
     service: light.turn_on
   - data:
-      entity_id: light.dimmable_light_1
+      entity_id: light.porch
+    service: light.turn_on
+  - data:
+      entity_id: light.front_porch
     service: light.turn_on
   - data:
       entity_id: switch.meter1
     service: switch.turn_on
-'1516486767614':
+'come_lake':
   alias: ComeLake
   sequence:
   - data: {}
     service: script.disarm_lake
+  - data:
+      away_mode: 'home'
+    service: nest.set_away_mode
+  - after: sunset
+    condition: sun
+  - data:
+      entity_id: switch.lake_front
+    service: switch.turn_on
+  - data:
+      entity_id: group.lights_rooms_laconia
+    service: light.turn_on
 '1519047883861':
   alias: Daniela Location Update
   sequence:
